@@ -1,0 +1,23 @@
+name = "dealerhire-platform-web"
+main = "src/workers/platform-web.ts"
+compatibility_date = "2026-03-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+APP_NAME = "DealerHire"
+LOCALE = "en"
+CANDIDATE_AI_MODE = "shadow"
+AD_ACTUATION_ENABLED = "false"
+
+# Bindings are environment-specific. See docs/adr/0002-cloudflare-postgres-topology.md
+# [[hyperdrive]]
+# binding = "HYPERDRIVE"
+# id = "<hyperdrive-id>"
+
+# [[r2_buckets]]
+# binding = "PUBLIC_ARTIFACTS"
+# bucket_name = "dealerhire-public"
+
+# [[r2_buckets]]
+# binding = "PRIVATE_ARTIFACTS"
+# bucket_name = "dealerhire-private"

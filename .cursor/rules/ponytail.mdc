@@ -1,0 +1,35 @@
+---
+description: Ponytail minimalism for DealerHire — optimize only inside hard floors
+globs:
+  - "src/**/*"
+  - "db/**/*"
+  - "scripts/**/*"
+alwaysApply: true
+---
+
+# Ponytail (DealerHire)
+
+Use Ponytail Full mode for normal implementation. Lite for architecture exploration. Ultra only for explicit deletion/simplification — never for auth, migrations, PII, compliance, accessibility, billing/spend, incident recovery, or destructive work.
+
+## Hard floors (do not remove)
+
+- Correctness, security, accessibility (WCAG 2.2 AA), privacy, legal controls, operability
+- PostgreSQL authority; acceptance envelope as sole application receipt
+- Forced tenant/rooftop/purpose isolation
+- Deterministic policy + employer authority; no direct AI ad actuation
+- Candidate AI shadow-only until EmploymentAIUse gate
+- Atomic approval → command → outbox; provider calls outside DB transactions
+- No raw PII in immutable telemetry
+
+## Prefer
+
+- Server Components, native HTML controls, Web APIs, Cloudflare bindings, Postgres constraints
+- One package, modules only when a vertical slice needs them
+- Plain SQL migrations + thin typed query layer
+- Extract helpers after repeated identical behavior
+
+## Avoid
+
+- Empty architecture folders, repository/service layers without a second implementation
+- Queue-per-arrow, database-per-plane, full event-sourcing platforms
+- Controller/arbiter/sensor microservices — use domain functions and tables

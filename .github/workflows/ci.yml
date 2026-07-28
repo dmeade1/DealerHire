@@ -1,0 +1,32 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install (frozen)
+        run: pnpm install --frozen-lockfile
+      - name: Verify
+        run: pnpm verify
+      - name: SBOM (cyclonedx-lite)
+        run: |
+          mkdir -p artifacts
+          pnpm list --depth 0 --json > artifacts/sbom-deps.json
+          echo "digest=$(git rev-parse HEAD)" > artifacts/provenance.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ci-artifacts
+          path: artifacts/

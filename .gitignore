@@ -1,0 +1,17 @@
+node_modules
+.next
+.wrangler
+.dist
+dist
+coverage
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+.turbo
+.open-next
+.vercel
+.founder-literacy.local.json
+*.tsbuildinfo
+.pnpm-store
