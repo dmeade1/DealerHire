@@ -1,0 +1,16 @@
+name = "dealerhire-intake-api"
+main = "src/workers/intake-api.ts"
+compatibility_date = "2026-03-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+APP_NAME = "DealerHire Intake"
+TURNSTILE_MODE = "risk_based"
+
+# [[queues.producers]]
+# binding = "APPLICANT_INGEST"
+# queue = "applicant-ingest"
+
+# [[r2_buckets]]
+# binding = "PRIVATE_ARTIFACTS"
+# bucket_name = "dealerhire-private"

@@ -1,0 +1,15 @@
+name = "dealerhire-backplane"
+main = "src/workers/backplane.ts"
+compatibility_date = "2026-03-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+APP_NAME = "DealerHire Backplane"
+CANDIDATE_AI_MODE = "shadow"
+AD_ACTUATION_ENABLED = "false"
+
+# [[queues.consumers]]
+# queue = "applicant-ingest"
+# max_batch_size = 10
+# max_retries = 5
+# dead_letter_queue = "applicant-ingest-dlq"
