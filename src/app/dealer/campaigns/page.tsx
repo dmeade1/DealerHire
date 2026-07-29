@@ -1,4 +1,12 @@
-export default function CampaignsPage() {
+import { requireActor } from "@/platform/auth/guard";
+
+export default async function CampaignsPage() {
+  await requireActor({
+    kind: "dealer",
+    purpose: "hiring_operations",
+    // Import path is concierge; dealers with listing.write may view the shell.
+    capability: ["campaign.import", "listing.write"],
+  });
   return (
     <article>
       <h1>Campaigns</h1>

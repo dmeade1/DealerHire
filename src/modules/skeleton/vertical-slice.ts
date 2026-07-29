@@ -13,11 +13,11 @@ import { betaBlockedReason } from "@/modules/roles/catalog";
  */
 export function runSyntheticVerticalSlice() {
   const payload: ListingPayload = {
-    title: "ASE Automotive Technician",
+    title: "ASE Automotive Technician (SYNTHETIC)",
     department: "fixed_operations",
     jobFamily: "technician",
     description:
-      "Perform diagnostics and repair on vehicles in a dealership fixed ops environment with safety and OEM procedures.",
+      "Perform diagnostics and repair on vehicles in a dealership fixed ops environment with safety and OEM procedures. SYNTHETIC.",
     schedule: "Tue-Sat",
     locationType: "onsite",
     mustHaveSkills: ["diagnostics"],

@@ -1,11 +1,27 @@
 -- Tighten rooftop NOT NULL + tenant-scoped idempotency; close null-rooftop liveness hole.
 -- FORCE ROW LEVEL SECURITY
+-- Upgrade rule: never silently delete operational evidence — abort if backfill is incomplete.
 
 -- ---------------------------------------------------------------------------
--- Outbox / receipts: rooftop required (orphan nulls cannot be isolated)
+-- Outbox / receipts: rooftop required (abort if orphans remain)
 -- ---------------------------------------------------------------------------
-DELETE FROM hiring.outbox WHERE rooftop_id IS NULL;
-DELETE FROM hiring.actuation_receipts WHERE rooftop_id IS NULL;
+DO $$
+DECLARE
+  outbox_orphans integer;
+  receipt_orphans integer;
+  liveness_orphans integer;
+BEGIN
+  SELECT count(*) INTO outbox_orphans FROM hiring.outbox WHERE rooftop_id IS NULL;
+  SELECT count(*) INTO receipt_orphans FROM hiring.actuation_receipts WHERE rooftop_id IS NULL;
+  SELECT count(*) INTO liveness_orphans FROM hiring.source_liveness WHERE rooftop_id IS NULL;
+
+  IF outbox_orphans > 0 OR receipt_orphans > 0 OR liveness_orphans > 0 THEN
+    RAISE EXCEPTION
+      '0005_isolation_tighten aborted: backfill rooftop_id before upgrade (outbox=%, actuation_receipts=%, source_liveness=%). Quarantine or repair — do not delete operational evidence.',
+      outbox_orphans, receipt_orphans, liveness_orphans;
+  END IF;
+END
+$$;
 
 ALTER TABLE hiring.outbox
   ALTER COLUMN rooftop_id SET NOT NULL;
@@ -19,8 +35,6 @@ ALTER TABLE hiring.actuation_receipts FORCE ROW LEVEL SECURITY;
 -- ---------------------------------------------------------------------------
 -- source_liveness: rooftop-scoped only (no tenant-wide null visibility)
 -- ---------------------------------------------------------------------------
-DELETE FROM hiring.source_liveness WHERE rooftop_id IS NULL;
-
 ALTER TABLE hiring.source_liveness
   ALTER COLUMN rooftop_id SET NOT NULL;
 

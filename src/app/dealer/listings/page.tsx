@@ -1,6 +1,13 @@
+import { requireActor } from "@/platform/auth/guard";
 import { ROLE_CATALOG, betaBlockedReason } from "@/modules/roles/catalog";
 
-export default function DealerListingsPage() {
+export default async function DealerListingsPage() {
+  await requireActor({
+    kind: "dealer",
+    purpose: "hiring_operations",
+    capability: "listing.write",
+  });
+
   const block = betaBlockedReason();
   return (
     <article>

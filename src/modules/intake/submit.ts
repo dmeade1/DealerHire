@@ -6,7 +6,12 @@ import {
   type ResumeState,
 } from "@/modules/intake/envelope";
 import { normalizeG1StructuredPayload } from "@/modules/intake/g1-payload";
+import {
+  isIngestQueueAvailable,
+  projectEnvelopeToApplication,
+} from "@/modules/intake/project";
 import { assertIntakeNotPaused } from "@/modules/ops/kill-switch";
+import { emitSafeEvent } from "@/platform/telemetry/safe-event";
 
 export type AcceptanceReceipt = {
   accepted: true;
@@ -124,6 +129,33 @@ export async function issueAcceptanceReceipt(
       return denial(500, "intake_failed", "No receipt was issued. Acceptance did not produce an ID.");
     }
 
+    // RC-03: projection is non-gating. Queue-down skips; later replay converges.
+    if (isIngestQueueAvailable() && !result.idempotentReplay) {
+      try {
+        await withTenantContext(
+          intakeActor(safeInput),
+          (sql) =>
+            projectEnvelopeToApplication(sql, {
+              tenantId: safeInput.tenantId,
+              envelopeId: result.envelopeId,
+            }),
+          connectionString,
+        );
+      } catch {
+        // Receipt already issued; delayed drain / ops replay will project.
+      }
+    }
+
+    emitSafeEvent({
+      name: result.idempotentReplay ? "intake.accepted_replay" : "intake.accepted",
+      tenantId: safeInput.tenantId,
+      rooftopId: safeInput.rooftopId,
+      publicApplicationId: result.publicApplicationId,
+      envelopeId: result.envelopeId,
+      status: "accepted",
+      meta: { resumeState: result.resumeState, synthetic: true },
+    });
+
     return {
       accepted: true,
       publicApplicationId: result.publicApplicationId,
@@ -134,6 +166,14 @@ export async function issueAcceptanceReceipt(
     };
   } catch (err) {
     const detail = err instanceof Error ? err.message : "unknown";
+    emitSafeEvent({
+      name: "intake.denied",
+      tenantId: safeInput.tenantId,
+      rooftopId: safeInput.rooftopId,
+      status: "denied",
+      errorCode: "intake_failed",
+      meta: { synthetic: true },
+    });
     return denial(
       500,
       "intake_failed",

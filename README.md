@@ -41,13 +41,19 @@ pnpm db:seed
 pnpm test:integration    # G1-03 RLS proofs via dealerhire_app (NOBYPASSRLS)
 ```
 
-Ops CLI:
+Ops CLI (loads `.env` automatically):
 
 ```bash
 pnpm ops health
 pnpm ops roles
-pnpm ops kill-switch
+pnpm ops liveness
+pnpm ops kill-switch:status
+pnpm ops outbox:inspect --limit 20
+# Mutations require OPS_CONTROL_SECRET + signed actor (--break-glass emergency only):
+pnpm ops kill-switch --scope intake --reason "SYNTHETIC drill" --actor-token … --actor-sig …
 ```
+
+See `docs/gates/g1-ops-demo-script.md` for the recovery walkthrough.
 
 ## Repository layout
 
@@ -59,6 +65,11 @@ pnpm ops kill-switch
 - `docs/` — partners, UX, ADRs, gates, roles, assurance
 - `.cursor/rules/ponytail.mdc` — minimalism inside hard floors
 - `.cursor/skills/founder-literacy/` — founder literacy skill
+- `.cursor/skills/ponytail-program/` — continuous program goal: `/loop` + `@.cursor/skills/ponytail-program/GOAL.md`
+
+## Auth (local G1)
+
+Dealer and ops App Router trees require a signed actor (`x-dh-actor` + `x-dh-actor-sig` HMAC with `CAPABILITY_SECRET`) and page-level capabilities. `DH_AUTH_MODE=hmac-g1` is the local default; production defaults to `idp` and fails closed until an IdP is Selected/wired. For local skeleton browsing only, set `ALLOW_UNSIGNED_SYNTHETIC_ACTOR=true` (ignored in production). Kill-switch HTTP (Next + backplane) requires `OPS_CONTROL_SECRET` plus a signed ops actor; CLI matches that contract (or audited `--break-glass`).
 
 ## Non-negotiables
 

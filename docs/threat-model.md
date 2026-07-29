@@ -96,3 +96,18 @@ Trust boundaries, STRIDE-oriented abuse cases, and mitigations for DealerHire be
 | G2 | Live-PII paths reviewed; zero-PII logging verified; incident tabletop |
 | G3 | Residual risks accepted; counsel + security sign-off |
 | Post-beta | Revisit for AI live, ad actuation, SMS, custom domains, cross-tenant |
+
+## G1 skeleton surface review (engineering self-check)
+
+Status: **Partial** — engineering walkthrough recorded; formal sign-off still open (G1-15).
+
+| Surface | Primary threats | Evidence / control |
+| --- | --- | --- |
+| Public apply + intake-api | T-07, T-10, T-19 | Envelope sole receipt; `normalizeG1StructuredPayload`; `emitSafeEvent`; `pnpm scan:pii` runtime no-console |
+| RLS tenant context | T-06 | `tests/integration/rls-isolation.test.ts`; FORCE RLS migrations |
+| Approval → command → outbox | T-04, T-16 | Effect hash bind; NeedsReconciliation + `resolveNeedsReconciliation` (no blind recreate) |
+| PageRelease /jobs | T-03 | Content-addressed manifest; single-active activate; rollback test |
+| Ops kill switch / outbox replay | T-12, T-13 | `OPS_CONTROL_SECRET` + signed actor; safe replay refuses create under recon |
+| Candidate AI | T-08, T-14 | Shadow-only; no reviewer UI path in G1 |
+
+Residual for G2+: IdP ceiling, live PII logging verification tabletop, webhook forgery drills, counsel review of T-07/T-21.

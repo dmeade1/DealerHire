@@ -6,6 +6,18 @@ compatibility_flags = ["nodejs_compat"]
 [vars]
 APP_NAME = "DealerHire Intake"
 TURNSTILE_MODE = "risk_based"
+# G1 interim receipt store remains Postgres. Flip to durable_object only after G2-02 selection.
+ACCEPTANCE_ENVELOPE_BINDING = "local"
+
+# G2-02 spike: Durable Object envelope candidate (not Selected — not the live receipt path).
+# [[durable_objects.bindings]]
+# name = "APPLICATION_ACCEPTANCE_ENVELOPE"
+# class_name = "ApplicationAcceptanceEnvelopeDo"
+# script_name = "dealerhire-intake-api"
+#
+# [[migrations]]
+# tag = "v1_envelope_do_spike"
+# new_classes = ["ApplicationAcceptanceEnvelopeDo"]
 
 # [[queues.producers]]
 # binding = "APPLICANT_INGEST"

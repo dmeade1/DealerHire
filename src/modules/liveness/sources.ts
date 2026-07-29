@@ -57,3 +57,20 @@ export async function upsertSourceLiveness(
   `;
   return rows[0];
 }
+
+export type SourceLivenessRow = {
+  source_key: string;
+  state: LivenessState;
+  expected_cadence_seconds: number;
+  last_heartbeat_at: Date | null;
+  updated_at: Date;
+};
+
+/** Ops inspect: current source_liveness rows for the session rooftop (G1-10). */
+export async function listSourceLiveness(sql: Sql): Promise<SourceLivenessRow[]> {
+  return sql<SourceLivenessRow[]>`
+    select source_key, state, expected_cadence_seconds, last_heartbeat_at, updated_at
+    from hiring.source_liveness
+    order by source_key
+  `;
+}

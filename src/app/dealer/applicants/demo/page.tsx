@@ -1,9 +1,17 @@
-export default function ApplicantReviewPage() {
+import { requireActor } from "@/platform/auth/guard";
+
+export default async function ApplicantReviewPage() {
+  await requireActor({
+    kind: "dealer",
+    purpose: "hiring_operations",
+    capability: "application.review",
+  });
   return (
     <article>
-      <h1>Evidence matrix — app_demo_001</h1>
+      <h1>Evidence matrix — SYNTHETIC shell (no live applicant)</h1>
       <p role="note">
-        Manual/primary-evidence path is authoritative. Shadow AI outputs are not displayed.
+        Manual/primary-evidence path is authoritative. Shadow AI outputs are not displayed. This
+        page is a UI shell only — not an inventory row.
       </p>
       <table>
         <thead>

@@ -156,4 +156,90 @@ describe("G1-03 forced RLS / missing-context denial", () => {
     );
     expect(rows).toEqual([]);
   });
+
+  it("publication_disclosure plane isolates page_releases across tenants", async () => {
+    const jcvA = "00000000-0000-4000-8000-00000000000a";
+    const pubA = actorFor(TENANT_A, ROOFTOP_A, "publication_disclosure");
+    const pubB = actorFor(TENANT_B, ROOFTOP_B, "publication_disclosure");
+
+    const created = await withTenantContext(pubA, async (sql) => {
+      const rows = await sql<{ id: string }[]>`
+        insert into publication.page_releases (
+          tenant_id, rooftop_id, job_control_version_id, locale, manifest,
+          content_address, activated_at
+        ) values (
+          ${TENANT_A}::uuid, ${ROOFTOP_A}::uuid, ${jcvA}::uuid, 'en',
+          '{"title":"SYNTHETIC RLS A","synthetic":true}'::jsonb,
+          ${`rls-a-${requisitionA}`}, now()
+        )
+        returning id
+      `;
+      return rows[0]!.id;
+    });
+
+    const fromA = await withTenantContext(pubA, async (sql) =>
+      sql<{ id: string }[]>`
+        select id from publication.page_releases where id = ${created}::uuid
+      `,
+    );
+    expect(fromA.map((r) => r.id)).toContain(created);
+
+    const fromB = await withTenantContext(pubB, async (sql) =>
+      sql<{ id: string }[]>`
+        select id from publication.page_releases where id = ${created}::uuid
+      `,
+    );
+    expect(fromB).toEqual([]);
+
+    const wrongPurpose = await withTenantContext(
+      actorFor(TENANT_A, ROOFTOP_A, "subject_permission"),
+      async (sql) =>
+        sql<{ id: string }[]>`
+          select id from publication.page_releases where id = ${created}::uuid
+        `,
+    );
+    expect(wrongPurpose).toEqual([]);
+  });
+
+  it("hiring_operations cannot read other-tenant commands", async () => {
+    const jcvA = "00000000-0000-4000-8000-00000000000a";
+    const hiringA = actorFor(TENANT_A, ROOFTOP_A, "hiring_operations");
+    const hiringB = actorFor(TENANT_B, ROOFTOP_B, "hiring_operations");
+    const probeKey = `idem-rls-${requisitionA}-${Date.now()}`;
+
+    await withTenantContext(hiringA, async (sql) => {
+      await sql`
+        update hiring.commands
+        set status = 'superseded'
+        where tenant_id = ${TENANT_A}::uuid
+          and lever = 'rls_probe'
+          and status in ('queued', 'executing', 'needs_reconciliation')
+      `;
+    });
+
+    const commandId = await withTenantContext(hiringA, async (sql) => {
+      const rows = await sql<{ id: string }[]>`
+        insert into hiring.commands (
+          tenant_id, rooftop_id, job_control_version_id, lever, payload_hash, payload,
+          status, idempotency_key
+        ) values (
+          ${TENANT_A}::uuid, ${ROOFTOP_A}::uuid, ${jcvA}::uuid, 'rls_probe',
+          ${`hash-rls-${probeKey}`}, '{"synthetic":true}'::jsonb,
+          'queued', ${probeKey}
+        )
+        returning id
+      `;
+      return rows[0]!.id;
+    });
+
+    const fromA = await withTenantContext(hiringA, async (sql) =>
+      sql<{ id: string }[]>`select id from hiring.commands where id = ${commandId}::uuid`,
+    );
+    expect(fromA.map((r) => r.id)).toContain(commandId);
+
+    const fromB = await withTenantContext(hiringB, async (sql) =>
+      sql<{ id: string }[]>`select id from hiring.commands where id = ${commandId}::uuid`,
+    );
+    expect(fromB).toEqual([]);
+  });
 });

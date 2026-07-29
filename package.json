@@ -16,8 +16,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:integration": "vitest run --config vitest.integration.config.ts",
-    "db:up": "docker compose up -d postgres 2>/dev/null || docker start dealerhire-pg 2>/dev/null || docker run -d --name dealerhire-pg -e POSTGRES_USER=dealerhire -e POSTGRES_PASSWORD=dealerhire -e POSTGRES_DB=dealerhire -p 5432:5432 postgres:16-alpine",
-    "db:down": "docker compose down 2>/dev/null || docker rm -f dealerhire-pg",
+    "db:up": "docker compose up -d postgres || docker-compose up -d postgres || docker start dealerhire-pg || docker run -d --name dealerhire-pg -e POSTGRES_USER=dealerhire -e POSTGRES_PASSWORD=dealerhire -e POSTGRES_DB=dealerhire -p 5432:5432 postgres:16-alpine",
+    "db:down": "docker compose down || docker-compose down || docker rm -f dealerhire-pg",
     "db:migrate": "node --import tsx scripts/migrate.ts",
     "db:migrate:check": "node --import tsx scripts/migrate.ts --check",
     "db:seed": "node --import tsx scripts/seed.ts",
@@ -46,5 +46,12 @@
     "eslint-config-next": "^15.3.0",
     "wrangler": "^4.0.0",
     "@cloudflare/workers-types": "^4.20250317.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "sharp": ">=0.35.0",
+      "postcss": ">=8.5.18",
+      "brace-expansion": ">=5.0.8"
+    }
   }
 }

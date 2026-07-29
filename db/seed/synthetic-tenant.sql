@@ -22,7 +22,7 @@ values (
   '00000000-0000-4000-8000-000000000003',
   '00000000-0000-4000-8000-000000000001',
   '00000000-0000-4000-8000-000000000002',
-  'Fixed Operations'
+  'Fixed Operations (SYNTHETIC)'
 )
 on conflict (id) do nothing;
 
@@ -48,7 +48,7 @@ insert into hiring.listing_revisions (
   '00000000-0000-4000-8000-000000000002',
   '00000000-0000-4000-8000-000000000004',
   1,
-  '{"title":"ASE Automotive Technician","synthetic":true}'::jsonb,
+  '{"title":"ASE Automotive Technician (SYNTHETIC)","synthetic":true,"label":"SYNTHETIC"}'::jsonb,
   'synthetic-listing-hash-v1',
   'synthetic:seed'
 )
@@ -72,3 +72,38 @@ insert into hiring.job_control_versions (
   'published'
 )
 on conflict (id) do nothing;
+
+-- SYNTHETIC source liveness seeds for /ops/liveness + CLI (G1-10).
+insert into hiring.source_liveness (
+  tenant_id, rooftop_id, source_key, expected_cadence_seconds, last_heartbeat_at, state, updated_at
+) values (
+  '00000000-0000-4000-8000-000000000001',
+  '00000000-0000-4000-8000-000000000002',
+  'intake.envelope',
+  300,
+  now(),
+  'fresh',
+  now()
+)
+on conflict (tenant_id, rooftop_id, source_key) do update set
+  expected_cadence_seconds = excluded.expected_cadence_seconds,
+  last_heartbeat_at = excluded.last_heartbeat_at,
+  state = excluded.state,
+  updated_at = now();
+
+insert into hiring.source_liveness (
+  tenant_id, rooftop_id, source_key, expected_cadence_seconds, last_heartbeat_at, state, updated_at
+) values (
+  '00000000-0000-4000-8000-000000000001',
+  '00000000-0000-4000-8000-000000000002',
+  'campaign.csv.meta',
+  3600,
+  null,
+  'missing',
+  now()
+)
+on conflict (tenant_id, rooftop_id, source_key) do update set
+  expected_cadence_seconds = excluded.expected_cadence_seconds,
+  last_heartbeat_at = excluded.last_heartbeat_at,
+  state = excluded.state,
+  updated_at = now();

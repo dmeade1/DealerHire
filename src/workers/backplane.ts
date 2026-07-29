@@ -2,17 +2,23 @@
  * backplane — queues, reconciliation, adapters, shadow AI jobs.
  */
 
+import { applyKillSwitch } from "@/modules/ops/kill-switch";
 import {
-  applyKillSwitch,
-  assertOpsControlSecret,
-  opsControlSecretFromRequest,
-} from "@/modules/ops/kill-switch";
+  assertOpsHttpAuth,
+  opsAuthErrorResponse,
+  opsAuthFailureDetail,
+} from "@/modules/ops/http-auth";
 
 export interface Env {
   CANDIDATE_AI_MODE?: string;
   AD_ACTUATION_ENABLED?: string;
   HYPERDRIVE?: Hyperdrive;
   DATABASE_URL?: string;
+  OPS_CONTROL_SECRET?: string;
+  CAPABILITY_SECRET?: string;
+  ALLOW_UNSIGNED_SYNTHETIC_ACTOR?: string;
+  SYNTHETIC_TENANT_ID?: string;
+  SYNTHETIC_ROOFTOP_ID?: string;
 }
 
 type QueueMessage = {
@@ -44,24 +50,30 @@ const backplane = {
         );
       }
       try {
+        if (env.OPS_CONTROL_SECRET) process.env.OPS_CONTROL_SECRET = env.OPS_CONTROL_SECRET;
+        if (env.CAPABILITY_SECRET) process.env.CAPABILITY_SECRET = env.CAPABILITY_SECRET;
+        if (env.ALLOW_UNSIGNED_SYNTHETIC_ACTOR) {
+          process.env.ALLOW_UNSIGNED_SYNTHETIC_ACTOR = env.ALLOW_UNSIGNED_SYNTHETIC_ACTOR;
+        }
+        if (env.SYNTHETIC_TENANT_ID) process.env.SYNTHETIC_TENANT_ID = env.SYNTHETIC_TENANT_ID;
+        if (env.SYNTHETIC_ROOFTOP_ID) process.env.SYNTHETIC_ROOFTOP_ID = env.SYNTHETIC_ROOFTOP_ID;
+
         const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
         const presented =
           typeof body.opsControlSecret === "string" ? body.opsControlSecret : null;
+        let actor;
         try {
-          assertOpsControlSecret(opsControlSecretFromRequest(request, presented));
+          actor = assertOpsHttpAuth(request, "ops.pause", {
+            presentedSecret: presented,
+            actorToken: typeof body.actorToken === "string" ? body.actorToken : null,
+            actorSignature: typeof body.actorSignature === "string" ? body.actorSignature : null,
+          });
         } catch (authErr) {
-          const detail = authErr instanceof Error ? authErr.message : "ops_control_unauthorized";
-          return Response.json(
-            {
-              paused: false,
-              error: detail,
-              message:
-                detail === "ops_control_secret_unconfigured"
-                  ? "No durable pause applied. OPS_CONTROL_SECRET must be configured."
-                  : "No durable pause applied. Valid OPS_CONTROL_SECRET required.",
-            },
-            { status: detail === "ops_control_secret_unconfigured" ? 503 : 401 },
+          const { body: errBody, status } = opsAuthErrorResponse(
+            opsAuthFailureDetail(authErr),
+            { paused: false },
           );
+          return Response.json(errBody, { status });
         }
         const reason = String(body.reason ?? "");
         if (!reason.trim()) {
@@ -75,7 +87,7 @@ const backplane = {
             scope: String(body.scope ?? "all_execution"),
             paused: body.paused === undefined ? true : Boolean(body.paused),
             reason,
-            actorSubjectRef: String(body.actorSubjectRef ?? "ops:backplane"),
+            actorSubjectRef: actor.actorSubjectRef,
           },
           connectionString,
         );

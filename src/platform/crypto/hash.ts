@@ -35,6 +35,20 @@ export function hashCapability(raw: string, secret = process.env.CAPABILITY_SECR
   return createHmac("sha256", requireCapabilitySecret(secret)).update(raw).digest("hex");
 }
 
+const G1_FINGERPRINT_RE = /^fp_[a-f0-9]{64}$/;
+
+/** Keyed G1 fingerprint — never store unsalted hashes of contact fields. */
+export function fingerprintG1(payload: unknown, secret = process.env.CAPABILITY_SECRET): string {
+  const digest = createHmac("sha256", requireCapabilitySecret(secret))
+    .update(stableStringify(payload))
+    .digest("hex");
+  return `fp_${digest}`;
+}
+
+export function isG1Fingerprint(value: unknown): value is string {
+  return typeof value === "string" && G1_FINGERPRINT_RE.test(value);
+}
+
 /**
  * Local envelope stand-in — base64 encoding is NOT encryption.
  * Live PII (G2) requires KMS-backed authenticated encryption.

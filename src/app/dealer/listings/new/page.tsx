@@ -1,4 +1,11 @@
-export default function NewListingPage() {
+import { requireActor } from "@/platform/auth/guard";
+
+export default async function NewListingPage() {
+  await requireActor({
+    kind: "dealer",
+    purpose: "hiring_operations",
+    capability: "listing.write",
+  });
   return (
     <article>
       <h1>New listing</h1>

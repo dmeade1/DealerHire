@@ -127,6 +127,29 @@ export async function createApprovalCase(
   return rows[0];
 }
 
+/**
+ * INV-21 / RC-08: while a command is NeedsReconciliation (or still queued/executing),
+ * do not insert another command for the same lever — never blind-recreate.
+ */
+export async function assertNoBlindCommandRecreate(
+  sql: Sql,
+  input: { tenantId: string; jobControlVersionId: string; lever: string },
+): Promise<void> {
+  const blockers = await sql<{ id: string; status: string }[]>`
+    select id, status from hiring.commands
+    where tenant_id = ${input.tenantId}::uuid
+      and job_control_version_id = ${input.jobControlVersionId}::uuid
+      and lever = ${input.lever}
+      and status in ('queued', 'executing', 'needs_reconciliation')
+    limit 1
+  `;
+  if (blockers[0]) {
+    throw new Error(
+      `no blind recreate: command ${blockers[0].id} is ${blockers[0].status} — resolve NeedsReconciliation via provider read-back`,
+    );
+  }
+}
+
 async function redeemApprovalAndEnqueueCommandInTx(sql: Sql, input: RedeemCommandInput) {
   const payloadHash = contentAddress(input.payload);
   const idempotencyKey = sha256(
@@ -146,6 +169,12 @@ async function redeemApprovalAndEnqueueCommandInTx(sql: Sql, input: RedeemComman
 
   const storedManifest = approval.effect_manifest as EffectManifest;
   assertApprovalBindsRequestedEffect(storedManifest, approval.effect_hash as string, input);
+
+  await assertNoBlindCommandRecreate(sql, {
+    tenantId: input.tenantId,
+    jobControlVersionId: input.jobControlVersionId,
+    lever: input.lever,
+  });
 
   await sql`
     update hiring.approval_cases
@@ -188,20 +217,32 @@ export async function redeemApprovalAndEnqueueCommand(sql: Sql, input: RedeemCom
   return runInTransaction(sql, (tx) => redeemApprovalAndEnqueueCommandInTx(tx, input));
 }
 
+/**
+ * Record an ambiguous provider outcome (timeout / unknown create).
+ * Leaves the command in needs_reconciliation; callers must not recreate.
+ */
 export async function markNeedsReconciliation(sql: Sql, commandId: string, detail: unknown) {
-  await sql`
-    update hiring.commands
-    set status = 'needs_reconciliation'
-    where id = ${commandId}::uuid
-  `;
-  await sql`
-    insert into hiring.outbox (
-      tenant_id, rooftop_id, aggregate_type, aggregate_id, event_type, payload
-    )
-    select tenant_id, rooftop_id, 'command', id, 'command.needs_reconciliation',
-      ${sql.json(asJson(detail))}
-    from hiring.commands where id = ${commandId}::uuid
-  `;
+  return runInTransaction(sql, async (tx) => {
+    const updated = await tx`
+      update hiring.commands
+      set status = 'needs_reconciliation'
+      where id = ${commandId}::uuid
+        and status in ('queued', 'executing')
+      returning id, status
+    `;
+    if (!updated[0]) {
+      throw new Error("command not eligible for NeedsReconciliation (missing or terminal)");
+    }
+    await tx`
+      insert into hiring.outbox (
+        tenant_id, rooftop_id, aggregate_type, aggregate_id, event_type, payload
+      )
+      select tenant_id, rooftop_id, 'command', id, 'command.needs_reconciliation',
+        ${tx.json(asJson(detail))}
+      from hiring.commands where id = ${commandId}::uuid
+    `;
+    return updated[0];
+  });
 }
 
 export async function attachActuationReceipt(
@@ -215,17 +256,27 @@ export async function attachActuationReceipt(
     observedState: unknown;
   },
 ) {
-  const receipts = await sql`
-    insert into hiring.actuation_receipts (
-      tenant_id, rooftop_id, command_id, provider, provider_ref, observed_state
-    ) values (
-      ${input.tenantId}::uuid, ${input.rooftopId}::uuid, ${input.commandId}::uuid,
-      ${input.provider}, ${input.providerRef ?? null}, ${sql.json(asJson(input.observedState))}
-    )
-    returning *
-  `;
-  await sql`
-    update hiring.commands set status = 'succeeded' where id = ${input.commandId}::uuid
-  `;
-  return receipts[0];
+  return runInTransaction(sql, async (tx) => {
+    const updated = await tx`
+      update hiring.commands
+      set status = 'succeeded'
+      where id = ${input.commandId}::uuid
+        and tenant_id = ${input.tenantId}::uuid
+        and status in ('queued', 'executing', 'needs_reconciliation')
+      returning id
+    `;
+    if (!updated[0]) {
+      throw new Error("command not eligible for actuation receipt");
+    }
+    const receipts = await tx`
+      insert into hiring.actuation_receipts (
+        tenant_id, rooftop_id, command_id, provider, provider_ref, observed_state
+      ) values (
+        ${input.tenantId}::uuid, ${input.rooftopId}::uuid, ${input.commandId}::uuid,
+        ${input.provider}, ${input.providerRef ?? null}, ${tx.json(asJson(input.observedState))}
+      )
+      returning *
+    `;
+    return receipts[0];
+  });
 }

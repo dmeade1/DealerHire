@@ -50,6 +50,37 @@ async function acceptApplicationInTx(
     throw new Error("jurisdiction snapshot required");
   }
 
+  // Defense in depth ahead of composite FKs: rooftop + published JCV must match tenant.
+  const rooftops = await sql`
+    select id from platform.rooftops
+    where id = ${input.rooftopId}::uuid
+      and tenant_id = ${input.tenantId}::uuid
+  `;
+  if (!rooftops[0]) {
+    throw new Error("rooftop not in tenant");
+  }
+  const jcvs = await sql`
+    select id from hiring.job_control_versions
+    where id = ${input.jobControlVersionId}::uuid
+      and tenant_id = ${input.tenantId}::uuid
+      and rooftop_id = ${input.rooftopId}::uuid
+      and status = 'published'
+  `;
+  if (!jcvs[0]) {
+    throw new Error("job_control_version not eligible for intake");
+  }
+  if (input.pageReleaseId) {
+    const releases = await sql`
+      select id from publication.page_releases
+      where id = ${input.pageReleaseId}::uuid
+        and tenant_id = ${input.tenantId}::uuid
+        and rooftop_id = ${input.rooftopId}::uuid
+    `;
+    if (!releases[0]) {
+      throw new Error("page_release not in tenant rooftop");
+    }
+  }
+
   const publicApplicationId = `app_${nanoid(16)}`;
   const envelopeBody = {
     ...input,
