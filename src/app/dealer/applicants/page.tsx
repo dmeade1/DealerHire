@@ -17,15 +17,16 @@ export default function ApplicantsPage() {
         </thead>
         <tbody>
           <tr>
-            <td>
-              <a href="/dealer/applicants/demo">app_demo_001</a>
+            <td colSpan={4}>
+              No acceptance envelopes to list yet. Inventory is loaded only from durable
+              ApplicationAcceptanceEnvelope rows (INV-11) — demo placeholders are not shown.
             </td>
-            <td>2026-07-28</td>
-            <td>pending_upload</td>
-            <td>received</td>
           </tr>
         </tbody>
       </table>
+      <p>
+        Demo detail shell (static): <a href="/dealer/applicants/demo">/dealer/applicants/demo</a>
+      </p>
     </article>
   );
 }

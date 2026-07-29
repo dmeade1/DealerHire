@@ -2,10 +2,18 @@ export default function ApplyPage() {
   return (
     <article>
       <h1>Apply — ASE Automotive Technician</h1>
-      <p>Accountless application. You will receive a durable receipt after submit.</p>
+      <p>
+        Accountless application (SYNTHETIC demo). Submit issues a receipt only after a durable
+        acceptance-envelope insert succeeds. Contact fields are fingerprinted for G1 (no live PII
+        storage); failures return an error, never a false acceptance.
+      </p>
 
       <form action="/api/applications" method="post" style={{ display: "grid", gap: 16 }}>
-        <input type="hidden" name="jobControlVersionId" value="synthetic-jcv-1" />
+        <input
+          type="hidden"
+          name="jobControlVersionId"
+          value="00000000-0000-4000-8000-00000000000a"
+        />
         <input type="hidden" name="idempotencyKey" value="" id="idempotencyKey" />
 
         <fieldset>
