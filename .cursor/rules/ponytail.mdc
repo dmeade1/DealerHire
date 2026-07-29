@@ -1,12 +1,6 @@
 ---
-description: Ponytail minimalism for DealerHire — optimize only inside hard floors
-globs:
-  - "src/**/*"
-  - "db/**/*"
-  - "scripts/**/*"
 alwaysApply: true
 ---
-
 # Ponytail (DealerHire)
 
 Use Ponytail Full mode for normal implementation. Lite for architecture exploration. Ultra only for explicit deletion/simplification — never for auth, migrations, PII, compliance, accessibility, billing/spend, incident recovery, or destructive work.
@@ -33,3 +27,14 @@ Use Ponytail Full mode for normal implementation. Lite for architecture explorat
 - Empty architecture folders, repository/service layers without a second implementation
 - Queue-per-arrow, database-per-plane, full event-sourcing platforms
 - Controller/arbiter/sensor microservices — use domain functions and tables
+
+## After every pass (mandatory)
+
+When an implementation/remediation pass finishes (code changed, verify claimed green, or a P0/P1 item marked done), **before stopping**:
+
+1. Run a Ponytail Full audit of what just landed (not a full-repo archaeology dump).
+2. Score hard floors Pass / Partial / Fail with paths.
+3. Call out new smells or regressions from *this* pass.
+4. Rank the next ≤5 Full-mode actions.
+
+A project `stop` hook also auto-requests this audit when product/test/schema files are dirty. If the hook fires, produce the audit immediately; do not start unrelated work.

@@ -5,6 +5,14 @@ description: Quiz and brief the founder on DealerHire ownership, flows, invarian
 
 # Founder literacy
 
+## Session isolation (hard)
+
+- Run **only** when the user explicitly asks for founder-literacy / brief / quiz / teach-back / release-check
+- Prefer a **dedicated chat**. If invoked inside an engineering or planning thread, do one brief or one question, then stop — do not continue as the primary agent for that thread
+- **Never** launch background Task/subagents for this skill unless the user explicitly asks
+- **Never** fix plans, edit product code, open PRs, or chain “follow-up actions” after a literacy turn
+- Literacy output is brief/quiz/teach-back/release-check only; score writes go only to `.founder-literacy.local.json`
+
 ## Modes
 
 - `brief`: explain the current diff in 60–90 seconds; ask one grounded question
