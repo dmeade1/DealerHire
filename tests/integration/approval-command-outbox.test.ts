@@ -11,6 +11,7 @@ import {
   actorFor,
   requireIntegrationDb,
   setupIntegrationDb,
+  supersedeActiveCommands,
   teardownIntegrationDb,
   withTenantContext,
 } from "./helpers/db";
@@ -21,6 +22,11 @@ describe("G1-06 approval + command + outbox atomicity", () => {
   beforeAll(async () => {
     requireIntegrationDb();
     await setupIntegrationDb();
+    await supersedeActiveCommands({
+      tenantId: TENANT_A,
+      rooftopId: ROOFTOP_A,
+      levers: ["publish"],
+    });
   }, 60_000);
 
   afterAll(async () => {
@@ -57,16 +63,10 @@ describe("G1-06 approval + command + outbox atomicity", () => {
 
     expect(approval.one_time_token).toBeTruthy();
 
-    // Clear prior queued/executing commands for this JCV+lever (partial unique index).
-    await withTenantContext(actorFor(TENANT_A, ROOFTOP_A, "hiring_operations"), async (sql) => {
-      await sql`
-        update hiring.commands
-        set status = 'cancelled'
-        where tenant_id = ${TENANT_A}::uuid
-          and job_control_version_id = ${JCV}::uuid
-          and lever = 'publish'
-          and status in ('queued', 'executing')
-      `;
+    await supersedeActiveCommands({
+      tenantId: TENANT_A,
+      rooftopId: ROOFTOP_A,
+      levers: ["publish"],
     });
 
     // Provider calls stay outside the redeem transaction (INV-20) — nothing invoked here.

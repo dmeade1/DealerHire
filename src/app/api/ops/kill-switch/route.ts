@@ -1,31 +1,17 @@
 import { NextResponse } from "next/server";
+import { applyKillSwitch, readKillSwitches } from "@/modules/ops/kill-switch";
 import {
-  applyKillSwitch,
-  assertOpsControlSecret,
-  opsControlSecretFromRequest,
-  readKillSwitches,
-} from "@/modules/ops/kill-switch";
-
-function unauthorized(detail: string, extras: Record<string, unknown> = {}) {
-  const status = detail === "ops_control_secret_unconfigured" ? 503 : 401;
-  return NextResponse.json(
-    {
-      ...extras,
-      error: detail,
-      message:
-        detail === "ops_control_secret_unconfigured"
-          ? "No ops control applied. OPS_CONTROL_SECRET must be configured."
-          : "No ops control applied. Valid OPS_CONTROL_SECRET required.",
-    },
-    { status },
-  );
-}
+  assertOpsHttpAuth,
+  opsAuthErrorResponse,
+  opsAuthFailureDetail,
+} from "@/modules/ops/http-auth";
 
 export async function GET(request: Request) {
   try {
-    assertOpsControlSecret(opsControlSecretFromRequest(request));
+    assertOpsHttpAuth(request, "ops.inspect");
   } catch (err) {
-    return unauthorized(err instanceof Error ? err.message : "ops_control_unauthorized");
+    const { body, status } = opsAuthErrorResponse(opsAuthFailureDetail(err));
+    return NextResponse.json(body, { status });
   }
   if (!process.env.DATABASE_URL) {
     return NextResponse.json(
@@ -65,31 +51,41 @@ export async function POST(request: Request) {
   let scope = "all_execution";
   let reason = "";
   let paused = true;
-  let actorSubjectRef = "ops:web";
   let presentedSecret: string | null = null;
+  let actorToken: string | null = null;
+  let actorSignature: string | null = null;
 
   if (contentType.includes("application/json")) {
     const body = (await request.json()) as Record<string, unknown>;
     scope = String(body.scope ?? scope);
     reason = String(body.reason ?? "");
     paused = body.paused === undefined ? true : Boolean(body.paused);
-    actorSubjectRef = String(body.actorSubjectRef ?? actorSubjectRef);
     presentedSecret =
       typeof body.opsControlSecret === "string" ? body.opsControlSecret : null;
+    actorToken = typeof body.actorToken === "string" ? body.actorToken : null;
+    actorSignature = typeof body.actorSignature === "string" ? body.actorSignature : null;
   } else {
     const form = await request.formData();
     scope = String(form.get("scope") || scope);
     reason = String(form.get("reason") || "");
     paused = String(form.get("paused") || "true") !== "false";
-    actorSubjectRef = String(form.get("actorSubjectRef") || actorSubjectRef);
     presentedSecret = String(form.get("opsControlSecret") || "") || null;
+    actorToken = String(form.get("actorToken") || "") || null;
+    actorSignature = String(form.get("actorSignature") || "") || null;
   }
 
+  let actor;
   try {
-    assertOpsControlSecret(opsControlSecretFromRequest(request, presentedSecret));
+    actor = assertOpsHttpAuth(request, "ops.pause", {
+      presentedSecret,
+      actorToken,
+      actorSignature,
+    });
   } catch (err) {
-    const detail = err instanceof Error ? err.message : "ops_control_unauthorized";
-    return unauthorized(detail, { paused: false });
+    const { body, status } = opsAuthErrorResponse(opsAuthFailureDetail(err), {
+      paused: false,
+    });
+    return NextResponse.json(body, { status });
   }
 
   if (!reason.trim()) {
@@ -104,7 +100,8 @@ export async function POST(request: Request) {
       scope,
       paused,
       reason,
-      actorSubjectRef,
+      // Bound to verified actor only — never trust body/form spoofing.
+      actorSubjectRef: actor.actorSubjectRef,
     });
     return NextResponse.json({
       paused: state.paused,

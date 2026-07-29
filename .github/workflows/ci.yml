@@ -23,11 +23,18 @@ jobs:
         run: pnpm verify
       - name: Synthetic PII / false-inventory scan
         run: pnpm scan:pii
-      - name: SBOM (cyclonedx-lite)
+      - name: Dependency audit (fail on high+)
+        run: pnpm audit --audit-level=high
+      - name: SBOM + provenance
         run: |
           mkdir -p artifacts
           pnpm list --depth 0 --json > artifacts/sbom-deps.json
           echo "digest=$(git rev-parse HEAD)" > artifacts/provenance.txt
+          echo "rollback_target=previous-github-actions-artifact" >> artifacts/provenance.txt
+      - name: Secret scan (gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/upload-artifact@v4
         with:
           name: ci-artifacts

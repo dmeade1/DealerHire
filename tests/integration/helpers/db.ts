@@ -153,6 +153,9 @@ export async function setupIntegrationDb(): Promise<{
   process.env.DATABASE_URL_ADMIN ??= adminConnection;
   process.env.DATABASE_URL = appUrl;
   await closeSql();
+  // Shared local DB: clear active command blockers so file order cannot poison INV-21 indexes.
+  await supersedeActiveCommands({ tenantId: TENANT_A, rooftopId: ROOFTOP_A });
+  await supersedeActiveCommands({ tenantId: TENANT_B, rooftopId: ROOFTOP_B });
   return { adminUrl: adminConnection, appUrl };
 }
 
@@ -175,6 +178,35 @@ export function actorFor(
     sessionId: "integration-session",
     expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
   };
+}
+
+/** Supersede active commands so re-runs are not blocked by INV-21 / unique indexes. */
+export async function supersedeActiveCommands(input: {
+  tenantId: string;
+  rooftopId: string;
+  levers?: string[];
+}): Promise<void> {
+  await withTenantContext(
+    actorFor(input.tenantId, input.rooftopId, "hiring_operations"),
+    async (sql) => {
+      if (input.levers?.length) {
+        await sql`
+          update hiring.commands
+          set status = 'superseded'
+          where tenant_id = ${input.tenantId}::uuid
+            and status in ('queued', 'executing', 'needs_reconciliation')
+            and lever in ${sql(input.levers)}
+        `;
+        return;
+      }
+      await sql`
+        update hiring.commands
+        set status = 'superseded'
+        where tenant_id = ${input.tenantId}::uuid
+          and status in ('queued', 'executing', 'needs_reconciliation')
+      `;
+    },
+  );
 }
 
 export { withTenantContext };

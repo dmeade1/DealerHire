@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function HomePage() {
   return (
     <article>
@@ -14,7 +16,7 @@ export default function HomePage() {
         <li>All dealership role families must be accepted before live beta</li>
       </ul>
       <p>
-        <a href="/jobs/demo">View demo job posting</a>
+        <Link href="/jobs/demo">View demo job posting</Link>
       </p>
     </article>
   );

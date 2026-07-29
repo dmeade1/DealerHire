@@ -70,6 +70,23 @@ Status values: `Selected` · `Recommended default (unselected)` · `Candidate` �
 | Constraints | ADR 0004; sole receipt authority; interim Postgres amendment blocks live PII until independent provider Selected |
 | Decision record | [ADR 0004 interim amendment](./adr/0004-application-acceptance-envelope.md#interim-store-g1-only--amendment) |
 
+### Envelope provider spike checklist (G2-02)
+
+Spike **both** candidates against the same harness before selection. Do not mark `Selected` until every row is Pass for one option.
+
+| Proof | Durable Object | R2 + D1 | Pass criteria |
+| --- | --- | --- | --- |
+| Conditional insert | `id` + idempotency key unique; second insert returns existing receipt | Object put + D1 row in one transactional/conditional pattern | Duplicate key → same application id; no double receipt |
+| Independence | Intake Worker path does not require control-plane Postgres | Same | Kill Postgres Hyperdrive binding; intake still issues receipt |
+| Encryption at rest | DO storage + app-layer envelope cipher (KMS/Worker secret) | R2 SSE + encrypted blob; D1 stores ciphertext metadata only | `ACCEPTANCE_ENVELOPE_BINDING=local` retired for spike env |
+| Worker restart | Restart mid-write; no lost accepted / no phantom accepted | Same | Chaos script |
+| Reconciler read | Backplane can list/scan envelopes for projection | Same | Replay converges without dup apps |
+| Fail-closed | Missing binding → no `accepted: true` | Same | Matches INV-11 |
+
+**Selection rule:** Prefer the option that passes independence + conditional insert with the least operational novelty. Record winner here as `Selected` and amend ADR 0004 to remove the Postgres interim for that environment. Until then G2 entry stays blocked.
+
+**Current status:** Contract harness + DO class spike in progress — `envelope-spike.ts` (in-memory DO/R2+D1 shapes) and `src/workers/envelope-do.ts` (conditional-insert DO logic + commented `wrangler.intake.toml` binding). **Not Selected:** live DO/R2+D1 deploy, encryption-at-rest, Worker-restart chaos, and Postgres-independence under Hyperdrive failure remain pending. Interim Postgres remains G1-only.
+
 ---
 
 ## 5. Malware / content scanning

@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { contentAddress } from "@/platform/crypto/hash";
-import { buildG1StructuredPayloadFromContact } from "@/modules/intake/g1-payload";
 import { isIntakeConfigured, issueAcceptanceReceipt } from "@/modules/intake/submit";
 
 const SYNTHETIC_TENANT =
@@ -47,20 +46,18 @@ export async function POST(request: Request) {
   }
 
   const resumePresent = resume instanceof File && resume.size > 0;
-  // G1: no live PII in the envelope body — fingerprint contact; label SYNTHETIC.
-  const structuredPayload = buildG1StructuredPayloadFromContact({
-    fullName,
-    email,
-    phone,
-    workHistory,
-  });
-
+  // Pass raw contact once; issueAcceptanceReceipt → normalizeG1 fingerprints server-side.
   const result = await issueAcceptanceReceipt({
     tenantId: SYNTHETIC_TENANT,
     rooftopId: SYNTHETIC_ROOFTOP,
     jobControlVersionId,
     idempotencyKey,
-    structuredPayload,
+    structuredPayload: {
+      synthetic: true,
+      label: "SYNTHETIC",
+      contact: { fullName, email, phone },
+      workHistory,
+    },
     noticeHashes: {
       "notice.app_terms.en.v1": contentAddress("notice.app_terms.en.v1"),
       "notice.privacy.en.v1": contentAddress("notice.privacy.en.v1"),

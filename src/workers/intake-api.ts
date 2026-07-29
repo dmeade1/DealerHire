@@ -57,6 +57,7 @@ const intakeApi = {
         }
 
         // G1 privacy gate before durable store / Hyperdrive (INV-37).
+        // Validate only — pass raw payload so issueAcceptanceReceipt is the sole fingerprint step.
         const sanitized = normalizeG1StructuredPayload(body.structuredPayload);
         if (!sanitized.ok) {
           return notAccepted(400, sanitized.error, sanitized.message);
@@ -86,7 +87,7 @@ const intakeApi = {
             jobControlVersionId: body.jobControlVersionId,
             pageReleaseId: body.pageReleaseId,
             idempotencyKey: body.idempotencyKey,
-            structuredPayload: sanitized.payload,
+            structuredPayload: body.structuredPayload,
             noticeHashes: body.noticeHashes,
             choiceHashes: body.choiceHashes ?? {},
             jurisdictionSnapshot: body.jurisdictionSnapshot,

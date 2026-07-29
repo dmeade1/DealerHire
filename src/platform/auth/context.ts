@@ -52,6 +52,7 @@ const ROLE_CAPS: Record<string, string[]> = {
     "pay.approve",
     "rubric.approve",
     "publication.approve",
+    "application.review",
     "analytics.read",
   ],
   hiring_manager: ["listing.write", "analytics.read"],

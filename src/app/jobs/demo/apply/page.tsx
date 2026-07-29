@@ -1,3 +1,6 @@
+import Link from "next/link";
+import { IdempotencyKeyField } from "./idempotency-field";
+
 export default function ApplyPage() {
   return (
     <article>
@@ -14,7 +17,7 @@ export default function ApplyPage() {
           name="jobControlVersionId"
           value="00000000-0000-4000-8000-00000000000a"
         />
-        <input type="hidden" name="idempotencyKey" value="" id="idempotencyKey" />
+        <IdempotencyKeyField />
 
         <fieldset>
           <legend>Contact</legend>
@@ -66,20 +69,11 @@ export default function ApplyPage() {
 
         <p>
           Need an accommodation or non-AI alternative?{" "}
-          <a href="/jobs/demo/apply/accommodation">Request accommodation</a>
+          <Link href="/jobs/demo/apply/accommodation">Request accommodation</Link>
         </p>
 
         <button type="submit">Submit application</button>
       </form>
-
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `
-            document.getElementById('idempotencyKey').value =
-              (crypto.randomUUID && crypto.randomUUID()) || String(Date.now());
-          `,
-        }}
-      />
     </article>
   );
 }

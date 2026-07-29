@@ -77,7 +77,7 @@ describe("intake-api INV-11 fail-closed without Hyperdrive", () => {
         body: JSON.stringify({
           idempotencyKey: "idem-label",
           noticeHashes: { "notice.app_terms.en.v1": "abc" },
-          structuredPayload: { contactFingerprint: "abc" },
+          structuredPayload: { email: "unlabeled@example.test" },
           tenantId: "00000000-0000-4000-8000-000000000001",
           rooftopId: "00000000-0000-4000-8000-000000000002",
           jobControlVersionId: "00000000-0000-4000-8000-00000000000a",

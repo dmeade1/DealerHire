@@ -1,5 +1,8 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import { loadEnvFile } from "./load-env";
+
+loadEnvFile();
 
 async function main() {
   const connectionString = process.env.DATABASE_URL_ADMIN ?? process.env.DATABASE_URL;

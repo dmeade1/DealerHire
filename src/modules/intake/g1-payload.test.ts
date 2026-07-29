@@ -1,24 +1,44 @@
 import { describe, expect, it } from "vitest";
+import { fingerprintG1 } from "@/platform/crypto/hash";
 import {
   buildG1StructuredPayloadFromContact,
   normalizeG1StructuredPayload,
 } from "./g1-payload";
 
 describe("normalizeG1StructuredPayload", () => {
-  it("accepts already-safe synthetic fingerprint payloads", () => {
+  it("rejects client-supplied fingerprint tokens even when format-valid", () => {
+    const fp = fingerprintG1({ fullName: "Ada", email: "ada@example.com", phone: "" });
     const result = normalizeG1StructuredPayload({
       synthetic: true,
       label: "SYNTHETIC",
-      contactFingerprint: "abc",
+      contactFingerprint: fp,
     });
-    expect(result.ok).toBe(true);
-    if (result.ok) {
-      expect(result.payload.label).toBe("SYNTHETIC");
-      expect(result.payload.contactFingerprint).toBe("abc");
-    }
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toBe("client_fingerprint_rejected");
   });
 
-  it("fingerprints nested contact and strips raw fields", () => {
+  it("rejects arbitrary strings under fingerprint keys", () => {
+    const result = normalizeG1StructuredPayload({
+      synthetic: true,
+      label: "SYNTHETIC",
+      contactFingerprint: "attacker@evil.example",
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toBe("client_fingerprint_rejected");
+  });
+
+  it("rejects client fingerprint when raw contact is also supplied", () => {
+    const result = normalizeG1StructuredPayload({
+      synthetic: true,
+      label: "SYNTHETIC",
+      contactFingerprint: fingerprintG1("ignored"),
+      contact: { fullName: "Ada", email: "ada@example.com" },
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toBe("client_fingerprint_rejected");
+  });
+
+  it("fingerprints nested contact with keyed HMAC and strips raw fields", () => {
     const result = normalizeG1StructuredPayload({
       synthetic: true,
       label: "SYNTHETIC",
@@ -26,9 +46,17 @@ describe("normalizeG1StructuredPayload", () => {
     });
     expect(result.ok).toBe(true);
     if (result.ok) {
-      expect(result.payload.contactFingerprint).toMatch(/^[a-f0-9]{64}$/);
-      expect("contact" in result.payload).toBe(false);
+      expect(result.payload.contactFingerprint).toMatch(/^fp_[a-f0-9]{64}$/);
+      expect(JSON.stringify(result.payload)).not.toMatch(/Ada|ada@example/);
     }
+  });
+
+  it("accepts synthetic-only payloads without contact", () => {
+    const result = normalizeG1StructuredPayload({
+      synthetic: true,
+      label: "SYNTHETIC",
+    });
+    expect(result.ok).toBe(true);
   });
 
   it("rejects unlabeled / non-synthetic payloads", () => {
@@ -65,13 +93,8 @@ describe("buildG1StructuredPayloadFromContact", () => {
       phone: "555",
       workHistory: "Built engines",
     });
-    expect(payload).toEqual(
-      expect.objectContaining({
-        synthetic: true,
-        label: "SYNTHETIC",
-        workHistoryChars: "Built engines".length,
-      }),
-    );
-    expect(JSON.stringify(payload)).not.toMatch(/Ada|ada@example/);
+    expect(payload.contactFingerprint).toMatch(/^fp_[a-f0-9]{64}$/);
+    expect(payload.workHistoryFingerprint).toMatch(/^fp_[a-f0-9]{64}$/);
+    expect(JSON.stringify(payload)).not.toMatch(/Ada|ada@example|Built engines/);
   });
 });

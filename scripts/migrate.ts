@@ -1,5 +1,8 @@
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
+import { loadEnvFile } from "./load-env";
+
+loadEnvFile();
 
 const APP_USER = process.env.DB_APP_USER ?? "dealerhire_app";
 const APP_PASSWORD = process.env.DB_APP_PASSWORD ?? "dealerhire_app";

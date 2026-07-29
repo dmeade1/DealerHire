@@ -2,6 +2,10 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { randomUUID } from "node:crypto";
 import { contentAddress } from "@/platform/crypto/hash";
 import { isReceiptValid } from "@/modules/intake/envelope";
+import {
+  isIngestQueueAvailable,
+  projectEnvelopeToApplication,
+} from "@/modules/intake/project";
 import { issueAcceptanceReceipt } from "@/modules/intake/submit";
 import {
   ROOFTOP_A,
@@ -122,5 +126,82 @@ describe("G1-08 / INV-11 acceptance envelope receipt", () => {
     expect(result.accepted).toBe(false);
     if (result.accepted) return;
     expect(result.error).toBe("envelope_unavailable");
+  });
+
+  it("RC-03 queue-down: receipt stays valid; delayed project converges with zero dupes", async () => {
+    // Simulate ingest queue unavailable after accept (non-gating).
+    const previousQueue = process.env.INGEST_QUEUE_AVAILABLE;
+    process.env.INGEST_QUEUE_AVAILABLE = "false";
+    expect(isIngestQueueAvailable()).toBe(false);
+
+    const receipt = await issueAcceptanceReceipt({
+      tenantId: TENANT_A,
+      rooftopId: ROOFTOP_A,
+      jobControlVersionId: JCV,
+      idempotencyKey: `idem-queue-down-${randomUUID()}`,
+      structuredPayload: { synthetic: true, label: "SYNTHETIC" },
+      noticeHashes: {
+        "notice.app_terms.en.v1": contentAddress("notice.app_terms.en.v1"),
+      },
+      choiceHashes: {},
+      jurisdictionSnapshot: { pack: "us-ny-state", synthetic: true },
+      communicationAuthority: {},
+    });
+    if (previousQueue === undefined) delete process.env.INGEST_QUEUE_AVAILABLE;
+    else process.env.INGEST_QUEUE_AVAILABLE = previousQueue;
+
+    expect(receipt.accepted).toBe(true);
+    if (!receipt.accepted) return;
+    expect(isReceiptValid(receipt)).toBe(true);
+
+    // Queue down: no application row yet.
+    const before = await withTenantContext(
+      actorFor(TENANT_A, ROOFTOP_A, "subject_permission"),
+      async (sql) =>
+        sql<{ n: number }[]>`
+          select count(*)::int as n from subject.applications
+          where envelope_id = ${receipt.envelopeId}::uuid
+        `,
+    );
+    expect(before[0]!.n).toBe(0);
+
+    // Drain / replay from envelope (queue recovers).
+    const first = await withTenantContext(
+      actorFor(TENANT_A, ROOFTOP_A, "subject_permission"),
+      (sql) =>
+        projectEnvelopeToApplication(sql, {
+          tenantId: TENANT_A,
+          envelopeId: receipt.envelopeId,
+        }),
+    );
+    expect(first.created).toBe(true);
+
+    const second = await withTenantContext(
+      actorFor(TENANT_A, ROOFTOP_A, "subject_permission"),
+      (sql) =>
+        projectEnvelopeToApplication(sql, {
+          tenantId: TENANT_A,
+          envelopeId: receipt.envelopeId,
+        }),
+    );
+    expect(second.created).toBe(false);
+    expect(second.applicationId).toBe(first.applicationId);
+
+    const after = await withTenantContext(
+      actorFor(TENANT_A, ROOFTOP_A, "subject_permission"),
+      async (sql) => {
+        const apps = await sql<{ n: number }[]>`
+          select count(*)::int as n from subject.applications
+          where envelope_id = ${receipt.envelopeId}::uuid
+        `;
+        const env = await sql<{ reconciled_at: Date | null }[]>`
+          select reconciled_at from subject.application_acceptance_envelopes
+          where id = ${receipt.envelopeId}::uuid
+        `;
+        return { apps: apps[0]!.n, reconciled: env[0]?.reconciled_at };
+      },
+    );
+    expect(after.apps).toBe(1);
+    expect(after.reconciled).toBeTruthy();
   });
 });

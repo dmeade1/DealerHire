@@ -45,6 +45,15 @@ Cross-plane projections are default-deny, copy only allowlisted fields, and reta
 - Integration tests must prove runtime roles cannot bypass tenant/rooftop/purpose rules.
 - Operator recovery tools use audited, scoped commands—not direct DB edits.
 
+### G1 auth ceiling (amendment)
+
+Until an IdP is **Selected** and session→actor mapping is wired:
+
+- Local/default: `DH_AUTH_MODE=hmac-g1` signed `x-dh-actor` stand-in (`src/platform/auth/actor.ts`).
+- Production default: `DH_AUTH_MODE=idp` — requires `IDENTITY_ISSUER` and fails closed until mapping exists (`identity_provider_not_wired`).
+- Production HMAC only with explicit `ALLOW_HMAC_ACTOR_IN_PRODUCTION=true` (skeleton preview; not a G2 path).
+- `ALLOW_UNSIGNED_SYNTHETIC_ACTOR` remains local-only (`NODE_ENV !== production`).
+
 ## Alternatives considered
 
 | Alternative | Why rejected |
