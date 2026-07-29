@@ -24,16 +24,37 @@ export function randomToken(bytes = 32): string {
   return randomBytes(bytes).toString("base64url");
 }
 
-export function hashCapability(raw: string, secret = process.env.CAPABILITY_SECRET ?? "dev-only"): string {
-  return createHmac("sha256", secret).update(raw).digest("hex");
+export function requireCapabilitySecret(secret = process.env.CAPABILITY_SECRET): string {
+  if (!secret) {
+    throw new Error("CAPABILITY_SECRET is required");
+  }
+  return secret;
 }
 
-/** Local envelope ciphertext stand-in — replace with KMS/envelope encryption in production. */
+export function hashCapability(raw: string, secret = process.env.CAPABILITY_SECRET): string {
+  return createHmac("sha256", requireCapabilitySecret(secret)).update(raw).digest("hex");
+}
+
+/**
+ * Local envelope stand-in — base64 encoding is NOT encryption.
+ * Live PII (G2) requires KMS-backed authenticated encryption.
+ * Allowed only when ACCEPTANCE_ENVELOPE_BINDING=local.
+ */
 export function sealEnvelope(payload: unknown): string {
+  if (process.env.ACCEPTANCE_ENVELOPE_BINDING !== "local") {
+    throw new Error(
+      "sealEnvelope blocked: insecure encoding requires ACCEPTANCE_ENVELOPE_BINDING=local; use KMS-backed encryption before live PII",
+    );
+  }
   const json = stableStringify(payload);
   return Buffer.from(json, "utf8").toString("base64url");
 }
 
 export function openEnvelope(ciphertext: string): unknown {
+  if (process.env.ACCEPTANCE_ENVELOPE_BINDING !== "local") {
+    throw new Error(
+      "openEnvelope blocked: insecure decoding requires ACCEPTANCE_ENVELOPE_BINDING=local",
+    );
+  }
   return JSON.parse(Buffer.from(ciphertext, "base64url").toString("utf8"));
 }
