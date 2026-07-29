@@ -1,0 +1,23 @@
+# Local Postgres for G1 migration/seed/integration proofs.
+# Preferred by `pnpm db:up` when Docker Compose v2 is available; otherwise db:up
+# falls back to a one-off `docker run --name dealerhire-pg`.
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: dealerhire-pg
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: dealerhire
+      POSTGRES_PASSWORD: dealerhire
+      POSTGRES_DB: dealerhire
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dealerhire -d dealerhire"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+    volumes:
+      - dealerhire_pg:/var/lib/postgresql/data
+
+volumes:
+  dealerhire_pg:

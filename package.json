@@ -11,17 +11,21 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "pnpm typecheck",
+    "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:integration": "vitest run --config vitest.integration.config.ts",
+    "db:up": "docker compose up -d postgres 2>/dev/null || docker start dealerhire-pg 2>/dev/null || docker run -d --name dealerhire-pg -e POSTGRES_USER=dealerhire -e POSTGRES_PASSWORD=dealerhire -e POSTGRES_DB=dealerhire -p 5432:5432 postgres:16-alpine",
+    "db:down": "docker compose down 2>/dev/null || docker rm -f dealerhire-pg",
     "db:migrate": "node --import tsx scripts/migrate.ts",
     "db:migrate:check": "node --import tsx scripts/migrate.ts --check",
+    "db:seed": "node --import tsx scripts/seed.ts",
     "worker:intake": "wrangler dev -c wrangler.intake.toml",
     "worker:backplane": "wrangler dev -c wrangler.backplane.toml",
     "ops": "node --import tsx scripts/ops-cli.ts",
-    "verify": "pnpm lint && pnpm typecheck && pnpm test && pnpm db:migrate:check"
+    "scan:pii": "node --import tsx scripts/scan-synthetic-pii.ts",
+    "verify": "pnpm typecheck && pnpm lint && pnpm test && pnpm db:migrate:check && pnpm scan:pii && pnpm build"
   },
   "dependencies": {
     "next": "^15.3.0",

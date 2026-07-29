@@ -37,7 +37,7 @@ export function runSyntheticVerticalSlice() {
   const effectManifest = {
     tenantId: "00000000-0000-4000-8000-000000000001",
     rooftopId: "00000000-0000-4000-8000-000000000002",
-    jobControlVersionId: "synthetic-jcv-1",
+    jobControlVersionId: "00000000-0000-4000-8000-00000000000a",
     lever: "publish",
     landingUrl: "https://jobs.dealerhire.example/demo",
     policyVersions: { pack: "us-ny-state" },
@@ -49,7 +49,7 @@ export function runSyntheticVerticalSlice() {
     title: payload.title,
     bodyHtml: `<p>${payload.description}</p>`,
     payDisclosure: "$25.00–$45.00 per hour",
-    jobControlVersionId: "synthetic-jcv-1",
+    jobControlVersionId: "00000000-0000-4000-8000-00000000000a",
   });
 
   const liveness = deriveLivenessState({

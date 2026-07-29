@@ -6,6 +6,11 @@ export default defineConfig({
     environment: "node",
     include: ["tests/integration/**/*.test.ts"],
     testTimeout: 30_000,
+    fileParallelism: false,
+    env: {
+      ACCEPTANCE_ENVELOPE_BINDING: "local",
+      CAPABILITY_SECRET: "test-only-capability-secret",
+    },
   },
   resolve: {
     alias: {

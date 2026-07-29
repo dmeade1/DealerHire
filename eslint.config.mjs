@@ -1,16 +1,26 @@
-export default [
+import { dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+import { FlatCompat } from "@eslint/eslintrc";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+});
+
+/** @type {import("eslint").Linter.Config[]} */
+const eslintConfig = [
   {
-    ignores: [".next/**", "node_modules/**", ".wrangler/**", "artifacts/**"],
+    ignores: [
+      ".next/**",
+      "node_modules/**",
+      ".wrangler/**",
+      "artifacts/**",
+      "next-env.d.ts",
+    ],
   },
-  {
-    files: ["**/*.{js,mjs,cjs,ts,tsx}"],
-    languageOptions: {
-      ecmaVersion: 2022,
-      sourceType: "module",
-    },
-    rules: {
-      "no-unused-vars": "off",
-      "no-undef": "off",
-    },
-  },
+  ...compat.extends("next/core-web-vitals", "next/typescript"),
 ];
+
+export default eslintConfig;

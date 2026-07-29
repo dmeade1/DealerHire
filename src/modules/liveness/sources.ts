@@ -32,6 +32,7 @@ export async function upsertSourceLiveness(
   sql: Sql,
   input: {
     tenantId: string;
+    rooftopId: string;
     sourceKey: string;
     expectedCadenceSeconds: number;
     lastHeartbeatAt: Date | null;
@@ -39,14 +40,15 @@ export async function upsertSourceLiveness(
   },
 ) {
   const state = deriveLivenessState(input);
+  // Unique key is (tenant_id, rooftop_id, source_key) after 0005_isolation_tighten.
   const rows = await sql`
     insert into hiring.source_liveness (
-      tenant_id, source_key, expected_cadence_seconds, last_heartbeat_at, state, updated_at
+      tenant_id, rooftop_id, source_key, expected_cadence_seconds, last_heartbeat_at, state, updated_at
     ) values (
-      ${input.tenantId}::uuid, ${input.sourceKey}, ${input.expectedCadenceSeconds},
-      ${input.lastHeartbeatAt}, ${state}, now()
+      ${input.tenantId}::uuid, ${input.rooftopId}::uuid, ${input.sourceKey},
+      ${input.expectedCadenceSeconds}, ${input.lastHeartbeatAt}, ${state}, now()
     )
-    on conflict (tenant_id, source_key) do update set
+    on conflict (tenant_id, rooftop_id, source_key) do update set
       expected_cadence_seconds = excluded.expected_cadence_seconds,
       last_heartbeat_at = excluded.last_heartbeat_at,
       state = excluded.state,

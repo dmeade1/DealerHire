@@ -21,6 +21,8 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Verify
         run: pnpm verify
+      - name: Synthetic PII / false-inventory scan
+        run: pnpm scan:pii
       - name: SBOM (cyclonedx-lite)
         run: |
           mkdir -p artifacts
@@ -30,3 +32,36 @@ jobs:
         with:
           name: ci-artifacts
           path: artifacts/
+
+  integration:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: dealerhire
+          POSTGRES_PASSWORD: dealerhire
+          POSTGRES_DB: dealerhire
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U dealerhire -d dealerhire"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 15
+    env:
+      DATABASE_URL_ADMIN: postgres://dealerhire:dealerhire@localhost:5432/dealerhire
+      DATABASE_URL: postgres://dealerhire_app:dealerhire_app@localhost:5432/dealerhire
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install (frozen)
+        run: pnpm install --frozen-lockfile
+      - name: Integration tests (RLS)
+        run: pnpm test:integration

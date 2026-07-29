@@ -31,12 +31,14 @@ pnpm db:migrate:check
 pnpm dev
 ```
 
-Optional with local Postgres:
+Optional with local Postgres (`docker-compose.yml` via `pnpm db:up`, Docker/Colima):
 
 ```bash
 cp .env.example .env
-# set DATABASE_URL
-pnpm db:migrate
+pnpm db:up               # compose when available; else docker run dealerhire-pg
+pnpm db:migrate          # uses DATABASE_URL_ADMIN
+pnpm db:seed
+pnpm test:integration    # G1-03 RLS proofs via dealerhire_app (NOBYPASSRLS)
 ```
 
 Ops CLI:

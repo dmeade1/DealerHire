@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "DealerHire",
@@ -19,7 +20,25 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           background: "#fff",
         }}
       >
-        <a href="#main" style={{ position: "absolute", left: -9999 }}>
+        <style>{`
+          .skip-link {
+            position: absolute;
+            left: -9999px;
+            top: 0;
+            z-index: 1000;
+            padding: 8px 12px;
+            background: #111;
+            color: #fff;
+            text-decoration: underline;
+          }
+          .skip-link:focus {
+            left: 12px;
+            top: 12px;
+            outline: 3px solid #046;
+            outline-offset: 2px;
+          }
+        `}</style>
+        <a href="#main" className="skip-link">
           Skip to main content
         </a>
         <header
@@ -33,12 +52,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         >
           <strong>DealerHire</strong>
           <nav aria-label="Primary" style={{ display: "flex", gap: 12 }}>
-            <a href="/">Home</a>
-            <a href="/dealer/listings">Listings</a>
-            <a href="/dealer/applicants">Applicants</a>
-            <a href="/dealer/campaigns">Campaigns</a>
-            <a href="/dealer/analytics">Analytics</a>
-            <a href="/ops">Ops</a>
+            <Link href="/">Home</Link>
+            <Link href="/dealer/listings">Listings</Link>
+            <Link href="/dealer/applicants">Applicants</Link>
+            <Link href="/dealer/campaigns">Campaigns</Link>
+            <Link href="/dealer/analytics">Analytics</Link>
+            <Link href="/ops">Ops</Link>
           </nav>
         </header>
         <main id="main" style={{ padding: 20, maxWidth: 960, margin: "0 auto" }}>
