@@ -1,9 +1,9 @@
 # ADR 0004: Independent application-acceptance envelope
 
-- **Status:** Accepted
+- **Status:** Accepted (interim store amended 2026-07-28)
 - **Date:** 2026-07-28
 - **Deciders:** Architecture / engineering
-- **Related:** [0002](./0002-cloudflare-postgres-topology.md), [recovery criteria](../recovery-criteria.md), [gates G2](../gates/G2-live-pii.md)
+- **Related:** [0002](./0002-cloudflare-postgres-topology.md), [recovery criteria](../recovery-criteria.md), [gates G2](../gates/G2-live-pii.md), [provider allowlists](../provider-allowlists.md)
 
 ## Context
 
@@ -24,6 +24,16 @@ Application intake must give applicants a durable receipt even when R2, malware 
 ### Envelope provider constraint
 
 Select the independent envelope provider in Phase 0 (see [provider-allowlists.md](../provider-allowlists.md)). Candidates include **Durable Object** (strongly consistent single-key conditional insert) or **R2 + D1** (object + metadata conditional write). The architectural requirement is independence from the control-plane Postgres request path and conditional-insert semantics.
+
+### Interim store (G1 only) — amendment
+
+Until the independent provider is **Selected** and proven under failure:
+
+- **G1 interim receipt store** is PostgreSQL `subject.application_acceptance_envelopes` via `acceptApplication` / `issueAcceptanceReceipt`.
+- This satisfies INV-11 *conditional-insert receipt semantics* for the walking skeleton and synthetic drills.
+- It does **not** satisfy the independence requirement for live applicant PII.
+- **G2 entry is blocked** until either (a) Durable Object or R2+D1 is Selected with spike evidence, or (b) an explicit counsel/architecture waiver records why Postgres remains the envelope authority under control-plane DB failure modes.
+- `ACCEPTANCE_ENVELOPE_BINDING=local` encoding is not encryption; KMS-backed encryption remains a G2 hard gate.
 
 ## Consequences
 

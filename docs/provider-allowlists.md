@@ -63,12 +63,12 @@ Status values: `Selected` · `Recommended default (unselected)` · `Candidate` �
 
 | Field | Value |
 | --- | --- |
-| SELECTION STATUS | Recommended default (unselected) — **decision required in Phase 0** |
+| SELECTION STATUS | **Interim (G1):** Postgres `subject.application_acceptance_envelopes` — **not Selected for G2** |
 | Allowlist | Cloudflare **Durable Object** (conditional insert / single-key durability); **R2 + D1** (object + metadata conditional write) |
 | Recommended default | Spike both; prefer the option that proves conditional insert, encryption, replay scan, and independence from control-plane Postgres under failure |
 | Must provide | Conditional insert; durable across Worker restart; encryption at rest; idempotency key uniqueness; readable by backplane reconciler |
-| Constraints | ADR 0004; sole receipt authority |
-| Decision record | Update this row to `Selected` and link spike notes / ADR amendment if needed |
+| Constraints | ADR 0004; sole receipt authority; interim Postgres amendment blocks live PII until independent provider Selected |
+| Decision record | [ADR 0004 interim amendment](./adr/0004-application-acceptance-envelope.md#interim-store-g1-only--amendment) |
 
 ---
 
