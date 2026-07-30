@@ -19,7 +19,9 @@ pnpm verify
 pnpm scan:pii
 pnpm audit --audit-level=high || true
 pnpm sbom
+pnpm rollback:drill
 cp -f artifacts/sbom.cdx.json "$OUT/sbom.cdx.json" 2>/dev/null || true
+cp -f artifacts/rollback-drill.json "$OUT/rollback-drill.json" 2>/dev/null || true
 
 if [[ -n "${DATABASE_URL_ADMIN:-${DATABASE_URL:-}}" ]]; then
   pnpm db:migrate

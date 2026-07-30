@@ -24,6 +24,7 @@ Commands:
   outbox:replay       Safe requeue (requires signed actor; --break-glass emergency only)
   dlq:inspect         List open dead-letter rows (OPS_CONTROL_SECRET)
   dlq:retry           Safe DLQ retry → outbox (signed actor; --break-glass emergency only)
+  drain               List/project unprojected envelopes (OPS_CONTROL_SECRET; --apply to drain)
   liveness            Show source liveness semantics (+ DB rows if DATABASE_URL set)
   roles               Show role acceptance blocker
 
@@ -372,6 +373,55 @@ async function main() {
       safeRetryDeadLetter(sql, { deadLetterId, actorSubjectRef }),
     );
     console.log(JSON.stringify({ ...result, actorSubjectRef, breakGlass: breakGlassUsed }, null, 2));
+    return;
+  }
+
+  if (cmd === "drain") {
+    if (!process.env.DATABASE_URL) {
+      console.error("DATABASE_URL required");
+      process.exit(1);
+    }
+    const { assertOpsControlSecret, platformOpsActor } = await import(
+      "../src/modules/ops/kill-switch"
+    );
+    try {
+      assertOpsControlSecret(process.env.OPS_CONTROL_SECRET);
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : "ops_control_unauthorized");
+      process.exit(1);
+    }
+    const apply = args.includes("--apply");
+    const limit = Number(flag(args, "--limit") ?? "50");
+    const { withTenantContext } = await import("../src/platform/db/client");
+    const { listUnprojectedEnvelopes, drainUnprojectedEnvelopes } = await import(
+      "../src/modules/intake/drain"
+    );
+    // List may use hiring_operations; apply needs subject_permission (WITH CHECK on applications).
+    const listActor = {
+      ...platformOpsActor("ops:cli-drain"),
+      purpose: "hiring_operations" as const,
+      capabilities: ["ops.inspect", "ops.replay"],
+    };
+    if (!apply) {
+      const rows = await withTenantContext(listActor, (sql) =>
+        listUnprojectedEnvelopes(sql, { limit }),
+      );
+      console.log(JSON.stringify({ count: rows.length, rows, mode: "list" }, null, 2));
+      return;
+    }
+    const drainActor = {
+      ...platformOpsActor("ops:cli-drain"),
+      purpose: "subject_permission" as const,
+      capabilities: ["ops.inspect", "ops.replay"],
+    };
+    const tenantId =
+      flag(args, "--tenant") ??
+      process.env.SYNTHETIC_TENANT_ID ??
+      drainActor.tenantId;
+    const result = await withTenantContext(drainActor, (sql) =>
+      drainUnprojectedEnvelopes(sql, { tenantId, limit }),
+    );
+    console.log(JSON.stringify({ ...result, mode: "apply", tenantId }, null, 2));
     return;
   }
 

@@ -44,6 +44,8 @@ jobs:
           echo "rollback_target=git:${{ github.sha }}" >> artifacts/provenance.txt
           echo "workflow_run=${{ github.run_id }}" >> artifacts/provenance.txt
           echo "ref=${{ github.ref }}" >> artifacts/provenance.txt
+      - name: Rollback drill evidence (G1-14)
+        run: pnpm rollback:drill
       - name: Secret scan (gitleaks via container)
         run: |
           docker run --rm -v "$PWD:/path" zricethezav/gitleaks:v8.21.2 \

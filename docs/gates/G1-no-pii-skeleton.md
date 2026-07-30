@@ -15,33 +15,34 @@ Tenant/rooftop/team identity → forced tenant/purpose boundary → requirements
 | ID | Criterion | INV | Status | Evidence |
 | --- | --- | --- | --- | --- |
 | G1-01 | Clean-clone install, lint, typecheck, unit tests pass | — | **Pass** | Local `pnpm verify`; CI on `main`: https://github.com/dmeade1/DealerHire/actions/runs/30504876138 (`verify` + `integration`) |
-| G1-02 | Preview deploy of platform-web + intake-api + backplane configs | ADR 0001 | Partial | Temporary preview (claim within 60m): `https://dealerhire-platform-web.grizzled-rosehip.workers.dev/health`, `https://dealerhire-intake-api.grizzled-rosehip.workers.dev/health`, `https://dealerhire-backplane.grizzled-rosehip.workers.dev/health` — all return ok; permanent URLs after claim + `wrangler login` |
-| G1-03 | Forced RLS / missing-context denial proven in integration tests | INV-07, INV-08 | Partial | `rls-isolation.test.ts` (missing context, cross-tenant/rooftop, wrong purpose, page_releases + commands isolation); FORCE RLS migrations |
-| G1-04 | Synthetic listing → audit → approve → PageRelease → public fetch | INV-14–18 | Partial | put-before-activate via default memory store + `createR2BucketArtifactStore` (unit-tested); `/jobs` prefers content-addressed body + sanitized HTML; live Cloudflare R2 binding still Pending (wrangler commented) |
-| G1-05 | PageRelease rollback to prior manifest | INV-15, RC-06 | Partial | `tests/integration/g1-listing-publish.test.ts` (activate v2 → `rollbackPageRelease` → active is v1); activate path now single-active |
-| G1-06 | Approval + Command + outbox atomicity; provider call outside txn | INV-19–20 | Partial | `tests/integration/approval-command-outbox.test.ts`; `publishApprovedPage` activates PageRelease only after redeem txn commits |
-| G1-07 | Ambiguous timeout → NeedsReconciliation; no blind recreate | INV-21, RC-08 | Partial | Fixtures + resolve; `/ops/reconciliation` board with captions/`aria-live` (`ops-boards.test.ts`) |
-| G1-08 | Synthetic envelope accept + queue-down replay converges; no dupes | INV-11–13, RC-03 | Partial | `projectEnvelopeToApplication` + RC-03 drill in `acceptance-envelope.test.ts` (queue-down skip → delayed project, zero dupes); ops drain UI still Pending |
-| G1-09 | Inbox dedupe + schema/message N/N−1 compatibility | INV-39 | Partial | Envelope idempotency (G1-08); `src/modules/messaging/inbox.ts` N/N−1 matrix + unit tests; backplane `parseInboxMessage` poison→retry; FORCE RLS migrate:check remains separate |
-| G1-10 | Liveness Fresh/ObservedZero/Missing/Stale; abstain vs halt | INV-23 | Partial | `liveness.test.ts` + `/ops/liveness` (caption/`aria-live`) + CLI DB list; seed rows |
-| G1-11 | Telemetry contains **zero** applicant PII (synthetic scan) | INV-37 | Partial | `emitSafeEvent` + `pnpm scan:pii` (no `console.*` on intake/worker/telemetry paths; forbidden PII keys); live sink redaction review still Pending |
-| G1-12 | Audited ops CLI/page: inspect, DLQ/outbox replay, safe retry | INV-38 | Partial | Outbox + `hiring.dead_letter` DLQ (`ops-dlq.test.ts`); `/ops/recovery`; CLI `dlq:inspect`/`dlq:retry` + outbox replay (signed actor); demo recording still Pending |
-| G1-13 | Kill switches for intake and campaigns smoke-tested | INV-51, RC-15–16 | Partial | Durable store + API/CLI + `/ops` status readback/resume form; `kill-switch.test.ts`; secret + signed actor required |
-| G1-14 | SBOM, digests, SAST/deps/secrets, rollback target in CI | ADR 0010 | Partial | CI green run 30504738100: `pnpm sbom` + provenance `git:sha` + container gitleaks + `pnpm audit` + eslint; artifacts uploaded; full SAST product + rollback drill still Pending |
-| G1-15 | Threat model reviewed for skeleton surfaces | threat-model | Partial | Engineering self-check table in `docs/threat-model.md` (G1 skeleton surfaces); formal owner sign-off still Pending |
-| G1-16 | All synthetic data labeled `SYNTHETIC` | partners | Partial | Seed + vertical-slice + demo shells labeled; `pnpm scan:pii` asserts seed/vertical-slice/demo; partner dossier cross-check still Pending |
+| G1-02 | Preview deploy of platform-web + intake-api + backplane configs | ADR 0001 | Partial | Temp preview (claim ≤60m): `https://dealerhire-platform-web.misty-warlock.workers.dev/health`, `https://dealerhire-intake-api.misty-warlock.workers.dev/health`, `https://dealerhire-backplane.misty-warlock.workers.dev/health` — all return ok (2026-07-30); permanent after claim + `wrangler login` |
+| G1-03 | Forced RLS / missing-context denial proven in integration tests | INV-07, INV-08 | **Pass** | `rls-isolation.test.ts` + FORCE RLS migrations; green on main CI 30504876138 |
+| G1-04 | Synthetic listing → audit → approve → PageRelease → public fetch | INV-14–18 | Partial | put-before-activate + `createR2BucketArtifactStore` unit-tested; `/jobs` reader; **live R2 binding still Pending** (needs claimed CF account — R2 unsupported on temp accounts) |
+| G1-05 | PageRelease rollback to prior manifest | INV-15, RC-06 | **Pass** | `g1-listing-publish.test.ts` activate v2 → rollback → v1; green on main CI |
+| G1-06 | Approval + Command + outbox atomicity; provider call outside txn | INV-19–20 | **Pass** | `approval-command-outbox.test.ts`; `publishApprovedPage` post-commit activate; green on main CI |
+| G1-07 | Ambiguous timeout → NeedsReconciliation; no blind recreate | INV-21, RC-08 | **Pass** | Fixtures + resolve + `/ops/reconciliation`; green on main CI |
+| G1-08 | Synthetic envelope accept + queue-down replay converges; no dupes | INV-11–13, RC-03 | Partial | Envelope project + `ops-drain.test.ts` + `/ops/drain` + CLI `pnpm ops drain`; mark Pass when demo evidence committed |
+| G1-09 | Inbox dedupe + schema/message N/N−1 compatibility | INV-39 | **Pass** | Envelope idempotency + `messaging/inbox` N/N−1 unit tests + backplane parse; green in CI verify |
+| G1-10 | Liveness Fresh/ObservedZero/Missing/Stale; abstain vs halt | INV-23 | **Pass** | `liveness.test.ts` + `/ops/liveness` + CLI; green on main CI |
+| G1-11 | Telemetry contains **zero** applicant PII (synthetic scan) | INV-37 | Partial | `emitSafeEvent` + `pnpm scan:pii` green in CI; live sink redaction review still Pending |
+| G1-12 | Audited ops CLI/page: inspect, DLQ/outbox replay, safe retry | INV-38 | Partial | Outbox + DLQ + `/ops/recovery` + drain; `pnpm ops:demo-evidence` → `docs/gates/evidence/`; screenshots / program walkthrough still optional |
+| G1-13 | Kill switches for intake and campaigns smoke-tested | INV-51, RC-15–16 | **Pass** | Durable store + API/CLI + `/ops`; `kill-switch.test.ts`; green on main CI |
+| G1-14 | SBOM, digests, SAST/deps/secrets, rollback target in CI | ADR 0010 | Partial | SBOM + gitleaks + audit + eslint + `pnpm rollback:drill` + CodeQL workflow; Pass when CodeQL + rollback artifacts green on main |
+| G1-15 | Threat model reviewed for skeleton surfaces | threat-model | Partial | Engineering attestation in `docs/threat-model.md` (2026-07-30); formal owner/security sign-off still Pending |
+| G1-16 | All synthetic data labeled `SYNTHETIC` | partners | Partial | Seed/demos + `pnpm scan:pii` asserts dossier `SYNTHETIC` + `NO LIVE PARTNER SELECTED`; program owner cross-check sign-off still Pending |
 
 ## Honest Pass gap list (not Pass-ready yet)
 
 | Blocker | Gate IDs | Owner / note |
 | --- | --- | --- |
-| Permanent Cloudflare account (claim temporary preview; R2 still unsupported on temp accounts) | G1-02, G1-04 | Claim URL printed by `wrangler deploy --temporary`; then Selected R2 |
-| Live R2 PageRelease artifact binding (adapter ready; binding not Selected) | G1-04 | Uncomment wrangler `PUBLIC_ARTIFACTS` when bucket Selected |
-| Formal threat-model + fixture sign-off | G1-15, G1-16 | Program owner / partners |
-| Ops demo recording / screenshots linked as evidence | G1-12 | Operator walkthrough of `g1-ops-demo-script.md` |
-| ~~Green CI on main~~ | G1-01 | **Cleared** — https://github.com/dmeade1/DealerHire/actions/runs/30504876138 |
+| Claim permanent Cloudflare account (temp account Misty Warlock) | G1-02, G1-04 | Claim URL from latest `wrangler deploy --temporary` (chat); then Selected R2 |
+| Live R2 `PUBLIC_ARTIFACTS` Selected + uncomment wrangler binding | G1-04 | Permanent CF account (R2 not on temp accounts) |
+| Ops demo transcript committed + optional screenshots | G1-08, G1-12 | `pnpm ops:demo-evidence` with local DB/secrets |
+| CodeQL + rollback drill green on `main` | G1-14 | Workflows added this pass |
+| Formal threat-model + fixture sign-off | G1-15, G1-16 | Program owner / security |
+| Live sink redaction review | G1-11 | Observability Selected |
 
-**Engineering advanced (2026-07-29/30):** G1-09/12/04 eng; G0 hygiene; repo publicized to unlock Actions; temporary CF Worker previews (G1-02 Partial); CI verify+integration green on branch. Remaining: claim CF account + Selected R2, merge to main, sign-offs, demo recording. **Do not** pull G2 live PII until this list clears or is Waived.
+**Do not** pull G2 live PII until this list clears or is Waived.
 
 ## Sign-off
 
