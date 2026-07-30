@@ -8,8 +8,13 @@ APP_NAME = "DealerHire Backplane"
 CANDIDATE_AI_MODE = "shadow"
 AD_ACTUATION_ENABLED = "false"
 
+# Uncomment when Queues Selected. max_retries → CF DLQ; Postgres hiring.dead_letter is ops inspect path.
 # [[queues.consumers]]
 # queue = "applicant-ingest"
 # max_batch_size = 10
 # max_retries = 5
 # dead_letter_queue = "applicant-ingest-dlq"
+
+# [[r2_buckets]]
+# binding = "PUBLIC_ARTIFACTS"
+# bucket_name = "dealerhire-public"

@@ -65,7 +65,10 @@ async function main() {
   }
 
   if (checkOnly) {
-    console.log("Migration compatibility check passed (static ALTER … FORCE RLS).");
+    console.log(
+      "Migration FORCE RLS check passed (static ALTER … FORCE ROW LEVEL SECURITY). " +
+        "Inbox message N/N−1 is covered by src/modules/messaging/inbox.test.ts (G1-09), not this script.",
+    );
     return;
   }
 

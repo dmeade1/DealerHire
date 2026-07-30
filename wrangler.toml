@@ -14,6 +14,7 @@ AD_ACTUATION_ENABLED = "false"
 # binding = "HYPERDRIVE"
 # id = "<hyperdrive-id>"
 
+# Uncomment when Cloudflare R2 Selected for G1-04 Pass (adapter: createR2BucketArtifactStore).
 # [[r2_buckets]]
 # binding = "PUBLIC_ARTIFACTS"
 # bucket_name = "dealerhire-public"

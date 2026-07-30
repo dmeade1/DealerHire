@@ -4,7 +4,7 @@
 **Purpose:** Decide whether DealerHire may create the production repository and begin the synthetic no-PII walking skeleton under engineering governance.  
 **Source of truth:** Architecture plan (automotive labor intelligence) + engineering readiness sequence.  
 **Date opened:** 2026-07-28  
-**Overall gate status:** **`OPEN — not passed`**
+**Overall gate status:** **`OPEN — not passed`** (Conditional synthetic proceed recorded; U/A/C Status refreshed 2026-07-29 — no longer “Not started”)
 
 G0 is **design sufficiency for implementation**, not visual polish or live beta readiness. Ordinary microcopy and secondary dashboard ergonomics may remain iterative after G0.
 
@@ -61,16 +61,16 @@ G0 is **design sufficiency for implementation**, not visual polish or live beta 
 
 | ID | Criterion | Pass evidence | Fail if | Status |
 | --- | --- | --- | --- | --- |
-| U1 | Personas + capability matrix for applicant, HR owner, hiring manager, trained reviewer, dealer admin, concierge, recovery/compliance | Spec link | Missing actor | `Not started` |
-| U2 | Service blueprints for onboarding; listing/import/audit/approval/publication; application/receipt; correction/privacy/accommodation; human review→start; campaign CSV reconciliation; ATS recovery; operational recovery | Spec link | Missing critical journey | `Not started` |
-| U3 | Role-filtered IA + complete P0 screen/form inventory | Inventory link | P0 gaps unknown | `Not started` |
-| U4 | Canonical field dictionary (type, requiredness, validation, provenance, editor/viewer/approver, purpose, sensitivity, retention, ATS mapping, analytics eligibility, prohibited uses) | Dictionary link | Ambiguous fields | `Not started` |
-| U5 | Schema-driven form model: stable core + role-specific requirement/compensation modules for every dealership role family | Spec link | One-off forms per role without model | `Not started` |
-| U6 | Domain/degraded states specified (loading, empty, blocked, stale, denied, expired, duplicate, accepted, resume pending/quarantined, replaying, reconciled, magic-link recovery, `NeedsReconciliation`) | State dictionary | Silent failure states | `Not started` |
-| U7 | Low-fi prototypes for entire P0 journey; hi-fi only for critical applicant/approval/reviewer/recovery/analytics paths | Prototype links | Waterfall visual polish substituted for journey coverage | `Not started` |
-| U8 | Full dealership-role inventory exists (deep acceptance evidence may continue post-G0 but must finish before beta) | Role inventory | Unknown role families | `Not started` |
+| U1 | Personas + capability matrix for applicant, HR owner, hiring manager, trained reviewer, dealer admin, concierge, recovery/compliance | Spec link | Missing actor | **`Pass`** — [`personas.md`](../ux/personas.md), [`capability-matrix.md`](../ux/capability-matrix.md) |
+| U2 | Service blueprints for onboarding; listing/import/audit/approval/publication; application/receipt; correction/privacy/accommodation; human review→start; campaign CSV reconciliation; ATS recovery; operational recovery | Spec link | Missing critical journey | **`Pass`** — [`service-blueprints.md`](../ux/service-blueprints.md) (JB-01…08) |
+| U3 | Role-filtered IA + complete P0 screen/form inventory | Inventory link | P0 gaps unknown | **`Pass`** — [`information-architecture.md`](../ux/information-architecture.md), [`screen-form-inventory.md`](../ux/screen-form-inventory.md) |
+| U4 | Canonical field dictionary (type, requiredness, validation, provenance, editor/viewer/approver, purpose, sensitivity, retention, ATS mapping, analytics eligibility, prohibited uses) | Dictionary link | Ambiguous fields | **`Partial`** — [`field-dictionary.md`](../ux/field-dictionary.md); per-family module fields still thin |
+| U5 | Schema-driven form model: stable core + role-specific requirement/compensation modules for every dealership role family | Spec link | One-off forms per role without model | **`Partial`** — model in field-dictionary/charter; role matrices incomplete |
+| U6 | Domain/degraded states specified (loading, empty, blocked, stale, denied, expired, duplicate, accepted, resume pending/quarantined, replaying, reconciled, magic-link recovery, `NeedsReconciliation`) | State dictionary | Silent failure states | **`Pass`** — [`state-error-recovery.md`](../ux/state-error-recovery.md) |
+| U7 | Low-fi prototypes for entire P0 journey; hi-fi only for critical applicant/approval/reviewer/recovery/analytics paths | Prototype links | Waterfall visual polish substituted for journey coverage | **`Partial`** — [`prototypes.md`](../ux/prototypes.md) ASCII low-fi; no clickable hi-fi |
+| U8 | Full dealership-role inventory exists (deep acceptance evidence may continue post-G0 but must finish before beta) | Role inventory | Unknown role families | **`Partial`** — [`docs/roles/matrices/`](../roles/matrices/) + `src/modules/roles/catalog.ts`; most matrices stub |
 
-**Bundle U roll-up:** `Not started`
+**Bundle U roll-up:** **`Partial`** (Pass on U1–U3/U6; Partial U4/U5/U7/U8) — **not** `Not started`
 
 ---
 
@@ -78,18 +78,18 @@ G0 is **design sufficiency for implementation**, not visual polish or live beta 
 
 | ID | Criterion | Pass evidence | Fail if | Status |
 | --- | --- | --- | --- | --- |
-| A1 | Provider decisions: identity, PostgreSQL/DR, acceptance envelope, malware scanning, email, observability, labor data, AI routes, deployment topology | Decision log / ADRs | Critical vendor TBD with no owner | `Not started` |
-| A2 | ADRs for tenant/purpose isolation, publication manifests, command/outbox, intake acceptance, policy packs, tracking, communications, analytics, AI shadow isolation, rollback, recovery | ADR index | Missing critical ADR | `Not started` |
-| A3 | Data inventory + purpose/field/audience/retention matrix | Matrix link | Purpose ambiguity | `Not started` |
-| A4 | Role-allocation matrix (dealer vs platform duties) | Matrix + counsel ack | Unassigned duty | `Pending` (depends on nexus) |
-| A5 | Trust-boundary threat model + abuse cases | Threat model link | Unreviewed critical threat | `Not started` |
-| A6 | Invariant register | Register link | No invariants | `Not started` |
-| A7 | SLO/SLI definitions + recovery criteria | Ops draft | No recovery ownership | `Not started` |
-| A8 | Provider allowlists (incl. AI routes) | Allowlist doc | Open-ended model fallback | `Not started` |
-| A9 | Traceability matrix: invariant → actor/authority → journey → screen/form → record/state → notice/copy → event → test → recovery owner | Matrix link | Orphan critical flows | `Not started` |
-| A10 | Counsel implementation packet for exact NY nexus (or explicit deferral while synthetic-only) | Packet **or** documented synthetic deferral | Claiming live nexus without packet | `Pending (external selection)` for live; synthetic deferral allowed per §2 |
+| A1 | Provider decisions: identity, PostgreSQL/DR, acceptance envelope, malware scanning, email, observability, labor data, AI routes, deployment topology | Decision log / ADRs | Critical vendor TBD with no owner | **`Partial`** — ADRs + [`provider-allowlists.md`](../provider-allowlists.md); most vendors still unselected |
+| A2 | ADRs for tenant/purpose isolation, publication manifests, command/outbox, intake acceptance, policy packs, tracking, communications, analytics, AI shadow isolation, rollback, recovery | ADR index | Missing critical ADR | **`Partial`** — [`docs/adr/`](../adr/) 0001–0010 Accepted; no dedicated policy-pack ADR |
+| A3 | Data inventory + purpose/field/audience/retention matrix | Matrix link | Purpose ambiguity | **`Pass`** (synthetic) — [`data-inventory.md`](../data-inventory.md), [`purpose-field-retention-matrix.md`](../purpose-field-retention-matrix.md) |
+| A4 | Role-allocation matrix (dealer vs platform duties) | Matrix + counsel ack | Unassigned duty | **`Partial`** — [`role-allocation.md`](../role-allocation.md); counsel ack pending nexus |
+| A5 | Trust-boundary threat model + abuse cases | Threat model link | Unreviewed critical threat | **`Partial`** — [`threat-model.md`](../threat-model.md); formal sign-off open |
+| A6 | Invariant register | Register link | No invariants | **`Pass`** — [`invariant-register.md`](../invariant-register.md) |
+| A7 | SLO/SLI definitions + recovery criteria | Ops draft | No recovery ownership | **`Pass`** (draft) — [`slos.md`](../slos.md), [`recovery-criteria.md`](../recovery-criteria.md) |
+| A8 | Provider allowlists (incl. AI routes) | Allowlist doc | Open-ended model fallback | **`Partial`** — allowlist present; SELECTION STATUS largely unselected |
+| A9 | Traceability matrix: invariant → actor/authority → journey → screen/form → record/state → notice/copy → event → test → recovery owner | Matrix link | Orphan critical flows | **`Partial`** — [`traceability-matrix.md`](../traceability-matrix.md) + [`ux/traceability.md`](../ux/traceability.md) |
+| A10 | Counsel implementation packet for exact NY nexus (or explicit deferral while synthetic-only) | Packet **or** documented synthetic deferral | Claiming live nexus without packet | **`Pass (synthetic deferral)`** per §2/§6; live still **`Pending (external selection)`** — [`counsel-packet.md`](../counsel-packet.md) |
 
-**Bundle A roll-up:** `Not started` / partner-linked items pending
+**Bundle A roll-up:** **`Partial`** / partner-linked items pending — **not** `Not started`
 
 ---
 
@@ -99,24 +99,24 @@ Every critical data flow must have authority, retention, failure, recovery, and 
 
 | ID | Flow | Authority owner | Retention owner | Failure mode documented | Recovery owner | Test owner | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| C1 | Listing → audit → approval → `PageRelease` | | | | | | `Not started` |
-| C2 | Application acceptance envelope (+ resume pending/quarantine) | | | | | | `Not started` |
-| C3 | Human review → disposition → confirmed start | | | | | | `Not started` |
-| C4 | ATS handoff + reconciliation | | | | | | `Not started` |
-| C5 | Campaign CSV import + attribution (descriptive) | | | | | | `Not started` |
-| C6 | Rights / correction / withdrawal lineage | | | | | | `Not started` |
-| C7 | Emergency pause / kill switch | | | | | | `Not started` |
-| C8 | Backup restore / replay / ambiguous timeout | | | | | | `Not started` |
+| C1 | Listing → audit → approval → `PageRelease` | Dealer HR / hiring manager (approve); Platform eng (publish) | Platform eng | JB-02 / ADR 0005 / RC-06 | Platform eng | Platform eng (G1 publish tests) | **`Partial`** |
+| C2 | Application acceptance envelope (+ resume pending/quarantine) | Platform eng (receipt); Dealer (notices) | Platform eng + counsel floors | ADR 0004 / RC-01–03 | Platform eng | Platform eng (envelope tests) | **`Partial`** |
+| C3 | Human review → disposition → confirmed start | Dealer trained reviewer | Dealer + platform | JB-05 / role-allocation | Concierge + platform | Platform eng (UAT later) | **`Partial`** |
+| C4 | ATS handoff + reconciliation | Dealer HR + platform | Platform eng | ATS selection / JB-07 | Platform eng + concierge | Platform eng | **`Partial`** |
+| C5 | Campaign CSV import + attribution (descriptive) | Dealer admin + platform | Platform eng | JB-06 / ADR 0009 | Platform eng + concierge | Platform eng | **`Partial`** |
+| C6 | Rights / correction / withdrawal lineage | Dealer + counsel + platform | Platform eng + counsel | JB-04 / purpose matrix / RC-12 | Platform eng + counsel | Platform eng (G2) | **`Partial`** |
+| C7 | Emergency pause / kill switch | Platform eng (ops) | Platform eng | RC-15–16 / INV-51 | Platform eng (on-call) | Platform eng (`kill-switch` tests) | **`Partial`** |
+| C8 | Backup restore / replay / ambiguous timeout | Platform eng | Platform eng | RC-08–11 / ADR 0010 | Platform eng | Platform eng | **`Partial`** |
 
-**Bundle C roll-up:** `Not started`
+**Bundle C roll-up:** **`Partial`** (owners named from recovery-criteria / role-allocation; drill evidence incomplete)
 
 **Hard fails (any one fails G0):**
 
 | ID | Condition | Status |
 | --- | --- | --- |
-| X1 | Unresolved **critical** threat | `Not started` (must be Clear) |
-| X2 | False-success intake state possible in design | `Not started` (must be Clear) |
-| X3 | Ambiguous employer vs platform **decision** authority | `Not started` (must be Clear) |
+| X1 | Unresolved **critical** threat | **`Clear (design)`** — mitigations in threat-model; formal assurance sign-off still open for live |
+| X2 | False-success intake state possible in design | **`Clear (design)`** — INV-11–13 / ADR 0004 / envelope tests; live independent envelope still G2 |
+| X3 | Ambiguous employer vs platform **decision** authority | **`Clear (design)`** — role-allocation + INV-18; counsel confirmation pending nexus |
 
 ---
 
@@ -129,10 +129,11 @@ Every critical data flow must have authority, retention, failure, recovery, and 
 | Partner dossier | [`docs/partners/ny-design-partner-dossier.md`](../partners/ny-design-partner-dossier.md) | SYNTHETIC + empty live | 2026-07-28 |
 | Operating facts questionnaire | [`docs/partners/operating-facts-questionnaire.md`](../partners/operating-facts-questionnaire.md) | OFQ-2026-07-28 | 2026-07-28 |
 | ATS connector selection | [`docs/partners/ats-connector-selection.md`](../partners/ats-connector-selection.md) | Strategy locked | 2026-07-28 |
-| UX specs | _TBD_ | | |
-| ADR index | _TBD_ | | |
-| Threat model | _TBD_ | | |
-| Counsel packet | _TBD_ (live) | | |
+| UX specs | [`docs/ux/`](../ux/) (Complete v0.1 package) | 2026-07-29 | 2026-07-29 |
+| ADR index | [`docs/adr/README.md`](../adr/README.md) | 0001–0010 | 2026-07-29 |
+| Threat model | [`docs/threat-model.md`](../threat-model.md) | G1 self-check Partial | 2026-07-29 |
+| Counsel packet | [`docs/counsel-packet.md`](../counsel-packet.md) (live nexus pending; synthetic deferral via G0 §6) | scaffold | 2026-07-29 |
+| Invariants / recovery / allowlists | [`invariant-register.md`](../invariant-register.md), [`recovery-criteria.md`](../recovery-criteria.md), [`provider-allowlists.md`](../provider-allowlists.md) | current | 2026-07-29 |
 
 ---
 

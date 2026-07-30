@@ -15,3 +15,4 @@ coverage
 .founder-literacy.local.json
 *.tsbuildinfo
 .pnpm-store
+artifacts/

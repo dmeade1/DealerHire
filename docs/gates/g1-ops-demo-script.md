@@ -15,11 +15,12 @@ Synthetic skeleton only — no live PII, no live ads.
    Emergency only: `--break-glass`. Confirm: `pnpm ops kill-switch:status`.
 3. **Resume** — `/ops` resume form or CLI `--resume` with reason + signed actor.
 4. **Outbox inspect** — `pnpm ops outbox:inspect --limit 20` (OPS_CONTROL_SECRET; no break-glass).
-5. **NeedsReconciliation** — open `/ops/reconciliation`; open commands table must not offer blind recreate. Resolve via read-back + `resolveNeedsReconciliation` in code/tests.
-6. **Safe replay** — `pnpm ops outbox:replay --id <uuid>` with signed actor on `command.queued` only when queued/executing; expect refusal under `needs_reconciliation`.
-7. **Liveness** — `/ops/liveness` or `pnpm ops liveness` shows `source_liveness` with advise/pause.
+5. **DLQ / recovery board** — open `/ops/recovery`; `pnpm ops dlq:inspect --limit 20`. Safe retry: `pnpm ops dlq:retry --id <uuid>` (signed actor).
+6. **NeedsReconciliation** — open `/ops/reconciliation`; open commands table must not offer blind recreate. Resolve via read-back + `resolveNeedsReconciliation` in code/tests.
+7. **Safe replay** — `pnpm ops outbox:replay --id <uuid>` with signed actor on `command.queued` only when queued/executing; expect refusal under `needs_reconciliation`.
+8. **Liveness** — `/ops/liveness` or `pnpm ops liveness` shows `source_liveness` with advise/pause.
 
 ## Evidence
 
-- Record terminal output + screenshot of `/ops`, `/ops/reconciliation`, `/ops/liveness`.
+- Record terminal output + screenshot of `/ops`, `/ops/recovery`, `/ops/reconciliation`, `/ops/liveness`.
 - Link artifacts from the PR or gate evidence folder when available.

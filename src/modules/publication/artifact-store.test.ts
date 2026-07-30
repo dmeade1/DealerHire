@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  createR2BucketArtifactStore,
   createR2MemoryArtifactStore,
   putPageArtifactBeforeActivate,
+  type R2LikeBucket,
 } from "./artifact-store";
 
 const ARTIFACT = {
@@ -32,5 +34,26 @@ describe("R2-shaped page artifact store (G1-04 / ADR 0005)", () => {
     await expect(putPageArtifactBeforeActivate(store, ARTIFACT)).rejects.toThrow(
       /artifact_store_unavailable/,
     );
+  });
+
+  it("R2 bucket adapter honors put-before-activate + content-address get", async () => {
+    const objects = new Map<string, string>();
+    const bucket: R2LikeBucket = {
+      async put(key, value) {
+        objects.set(key, value);
+      },
+      async get(key) {
+        const value = objects.get(key);
+        if (value === undefined) return null;
+        return { text: async () => value };
+      },
+    };
+    const store = createR2BucketArtifactStore(bucket);
+    expect(store.name).toBe("r2_bucket");
+    const stored = await putPageArtifactBeforeActivate(store, ARTIFACT);
+    expect(objects.has(`pages/by-hash/${stored.contentAddress}.json`)).toBe(true);
+    expect(objects.has(stored.key)).toBe(true);
+    const got = await store.getByContentAddress(stored.contentAddress);
+    expect(got?.body.title).toContain("SYNTHETIC");
   });
 });
