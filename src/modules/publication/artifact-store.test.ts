@@ -2,7 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   createR2BucketArtifactStore,
   createR2MemoryArtifactStore,
+  getDefaultArtifactStore,
   putPageArtifactBeforeActivate,
+  resetDefaultArtifactStoreForTests,
+  setDefaultArtifactStore,
   type R2LikeBucket,
 } from "./artifact-store";
 
@@ -34,6 +37,17 @@ describe("R2-shaped page artifact store (G1-04 / ADR 0005)", () => {
     await expect(putPageArtifactBeforeActivate(store, ARTIFACT)).rejects.toThrow(
       /artifact_store_unavailable/,
     );
+  });
+
+  it("setDefaultArtifactStore shares publish/read singleton", async () => {
+    resetDefaultArtifactStoreForTests();
+    const injected = createR2MemoryArtifactStore();
+    setDefaultArtifactStore(injected);
+    expect(getDefaultArtifactStore()).toBe(injected);
+    const stored = await putPageArtifactBeforeActivate(getDefaultArtifactStore(), ARTIFACT);
+    const got = await injected.getByContentAddress(stored.contentAddress);
+    expect(got?.body.title).toContain("SYNTHETIC");
+    resetDefaultArtifactStoreForTests();
   });
 
   it("R2 bucket adapter honors put-before-activate + content-address get", async () => {

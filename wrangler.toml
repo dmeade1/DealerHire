@@ -14,7 +14,10 @@ AD_ACTUATION_ENABLED = "false"
 # binding = "HYPERDRIVE"
 # id = "<hyperdrive-id>"
 
-# Uncomment when Cloudflare R2 Selected for G1-04 Pass (adapter: createR2BucketArtifactStore).
+# G1 local Next uses process-local memory store (setDefaultArtifactStore / getDefaultArtifactStore).
+# Uncomment when permanent CF account + R2 Selected for G1-04 live Pass.
+# Wire: createR2BucketArtifactStore(env.PUBLIC_ARTIFACTS) at platform-web / OpenNext bootstrap.
+# Temp Cloudflare accounts cannot bind R2. See docs/gates/g1-04-publication-runbook.md.
 # [[r2_buckets]]
 # binding = "PUBLIC_ARTIFACTS"
 # bucket_name = "dealerhire-public"

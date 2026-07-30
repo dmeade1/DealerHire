@@ -23,6 +23,7 @@
     "db:seed": "node --import tsx scripts/seed.ts",
     "worker:intake": "wrangler dev -c wrangler.intake.toml",
     "worker:backplane": "wrangler dev -c wrangler.backplane.toml",
+    "worker:platform-web": "wrangler dev -c wrangler.toml",
     "ops": "node --import tsx scripts/ops-cli.ts",
     "scan:pii": "node --import tsx scripts/scan-synthetic-pii.ts",
     "sbom": "node --import tsx scripts/sbom.ts",

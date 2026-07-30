@@ -15,9 +15,9 @@ Tenant/rooftop/team identity → forced tenant/purpose boundary → requirements
 | ID | Criterion | INV | Status | Evidence |
 | --- | --- | --- | --- | --- |
 | G1-01 | Clean-clone install, lint, typecheck, unit tests pass | — | **Pass** | Local `pnpm verify`; CI on `main`: https://github.com/dmeade1/DealerHire/actions/runs/30504876138 (`verify` + `integration`) |
-| G1-02 | Preview deploy of platform-web + intake-api + backplane configs | ADR 0001 | Partial | Temp preview (claim ≤60m): `https://dealerhire-platform-web.misty-warlock.workers.dev/health`, `https://dealerhire-intake-api.misty-warlock.workers.dev/health`, `https://dealerhire-backplane.misty-warlock.workers.dev/health` — all return ok (2026-07-30); permanent after claim + `wrangler login` |
+| G1-02 | Preview deploy of platform-web + intake-api + backplane configs | ADR 0001 | Partial | Worker configs + `/health` stubs proven earlier on temp Misty Warlock (2026-07-30); **temp hostnames expired** — redeploy `--temporary` or `wrangler login` for permanent; Next `/healthz` local; OpenNext not Selected |
 | G1-03 | Forced RLS / missing-context denial proven in integration tests | INV-07, INV-08 | **Pass** | `rls-isolation.test.ts` + FORCE RLS migrations; green on main CI 30504876138 |
-| G1-04 | Synthetic listing → audit → approve → PageRelease → public fetch | INV-14–18 | Partial | put-before-activate + `createR2BucketArtifactStore` unit-tested; `/jobs` reader; **live R2 binding still Pending** (needs claimed CF account — R2 unsupported on temp accounts) |
+| G1-04 | Synthetic listing → audit → approve → PageRelease → public fetch | INV-14–18 | Partial | Shared default store + `artifactSource` assertion in integration; `pnpm ops publish:demo`; runbook `g1-04-publication-runbook.md`; R2 adapter unit-tested; **live R2 binding still Pending** (permanent CF account) |
 | G1-05 | PageRelease rollback to prior manifest | INV-15, RC-06 | **Pass** | `g1-listing-publish.test.ts` activate v2 → rollback → v1; green on main CI |
 | G1-06 | Approval + Command + outbox atomicity; provider call outside txn | INV-19–20 | **Pass** | `approval-command-outbox.test.ts`; `publishApprovedPage` post-commit activate; green on main CI |
 | G1-07 | Ambiguous timeout → NeedsReconciliation; no blind recreate | INV-21, RC-08 | **Pass** | Fixtures + resolve + `/ops/reconciliation`; green on main CI |
@@ -35,8 +35,8 @@ Tenant/rooftop/team identity → forced tenant/purpose boundary → requirements
 
 | Blocker | Gate IDs | Owner / note |
 | --- | --- | --- |
-| Claim permanent Cloudflare account (temp account Misty Warlock) | G1-02, G1-04 | Claim URL from latest `wrangler deploy --temporary` (chat); then Selected R2 |
-| Live R2 `PUBLIC_ARTIFACTS` Selected + uncomment wrangler binding | G1-04 | Permanent CF account (R2 not on temp accounts) |
+| Permanent Cloudflare account + redeploy worker `/health` previews | G1-02 | `wrangler login` or authorize `wrangler deploy --temporary` (prior Misty Warlock hostnames expired) |
+| Live R2 `PUBLIC_ARTIFACTS` Selected + wire `setDefaultArtifactStore` | G1-04 | Permanent CF account (R2 not on temp accounts); see `g1-04-publication-runbook.md` |
 | Formal threat-model + fixture sign-off | G1-15, G1-16 | Program owner / security — checklist below |
 
 **Do not** pull G2 live PII until this list clears or is Waived.
@@ -54,7 +54,7 @@ Confirm each item, then fill the table:
 
 | Role | Name | Date | Result |
 | --- | --- | --- | --- |
-| Engineering | | | Attestation recorded in threat-model (2026-07-30); reaffirm on merge of this gate |
+| Engineering | DealerHire eng (self-check) | 2026-07-30 | Reaffirmed — see threat-model G1 surface review + operability pass (publish:demo /healthz) |
 | Program owner | | | |
 | Security (optional G1) | | | |
 

@@ -99,16 +99,16 @@ Trust boundaries, STRIDE-oriented abuse cases, and mitigations for DealerHire be
 
 ## G1 skeleton surface review (engineering self-check)
 
-Status: **Engineering complete (2026-07-30)** — formal program-owner / security sign-off still open (G1-15).
+Status: **Engineering complete (2026-07-30, reaffirmed same day after publish:demo /healthz operability pass)** — formal program-owner / security sign-off still open (G1-15).
 
 | Surface | Primary threats | Evidence / control |
 | --- | --- | --- |
 | Public apply + intake-api | T-07, T-10, T-19 | Envelope sole receipt; `normalizeG1StructuredPayload`; `emitSafeEvent`; `pnpm scan:pii` runtime no-console |
 | RLS tenant context | T-06 | `tests/integration/rls-isolation.test.ts`; FORCE RLS migrations |
 | Approval → command → outbox | T-04, T-16 | Effect hash bind; NeedsReconciliation + `resolveNeedsReconciliation` (no blind recreate) |
-| PageRelease /jobs | T-03 | Content-addressed manifest; single-active activate; rollback test |
+| PageRelease /jobs | T-03 | Content-addressed store + pointer; shared default store; `pnpm ops publish:demo`; integration asserts `artifactSource=r2_memory` |
 | Ops kill switch / outbox / DLQ / drain | T-12, T-13 | `OPS_CONTROL_SECRET` + signed actor; `/ops/recovery` + `/ops/drain`; safe replay refuses create under recon |
 | Candidate AI | T-08, T-14 | Shadow-only; no reviewer UI path in G1 |
 | Partner fixtures | — | `docs/partners/ny-design-partner-dossier.md` SYNTHETIC + `NO LIVE PARTNER SELECTED`; enforced by `pnpm scan:pii` |
 
-**Engineering attestation:** G1 skeleton surfaces above reviewed against T-01…T-22 mitigations present in code/tests as of 2026-07-30. Residual for G2+: IdP ceiling, live PII logging verification tabletop, webhook forgery drills, counsel review of T-07/T-21. Program owner / security sign-off still required for G1-15 Pass.
+**Engineering attestation:** G1 skeleton surfaces above reviewed against T-01…T-22 mitigations present in code/tests as of 2026-07-30 (reaffirmed after G1-04 operability wiring). Residual for G2+: IdP ceiling, live PII logging verification tabletop, webhook forgery drills, counsel review of T-07/T-21, live R2/OpenNext for durable public fetch. Program owner / security sign-off still required for G1-15 Pass.

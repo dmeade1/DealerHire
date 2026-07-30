@@ -27,7 +27,7 @@ export type PublicJobView = {
   releaseId: string;
   /** Present when content-addressed artifact store has the object (ADR 0005). */
   artifactKey?: string;
-  artifactSource: "r2_memory" | "page_release_manifest";
+  artifactSource: "r2_memory" | "r2_bucket" | "page_release_manifest";
 };
 
 /**
@@ -72,11 +72,12 @@ export async function loadPublicJobBySlug(slug: string): Promise<PublicJobView |
   let artifactSource: PublicJobView["artifactSource"] = "page_release_manifest";
 
   try {
-    const stored = await getDefaultArtifactStore().getByContentAddress(contentAddress);
+    const store = getDefaultArtifactStore();
+    const stored = await store.getByContentAddress(contentAddress);
     if (stored && stored.contentAddress === contentAddress) {
       bodyHtml = stored.body.bodyHtml;
       artifactKey = stored.key;
-      artifactSource = "r2_memory";
+      artifactSource = store.name;
     }
   } catch {
     // Store unavailable → fail open to manifest for G1 (public page still serves pointer facts).

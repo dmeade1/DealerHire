@@ -131,6 +131,19 @@ export function getDefaultArtifactStore(): PageArtifactStore {
 }
 
 /**
+ * Inject store for tests / future Worker R2 wiring.
+ * Callers that publish and read must share one process (or Selected R2).
+ */
+export function setDefaultArtifactStore(store: PageArtifactStore): void {
+  defaultStore = store;
+}
+
+/** Test helper — clears the singleton so the next get recreates a fresh memory store. */
+export function resetDefaultArtifactStoreForTests(): void {
+  defaultStore = null;
+}
+
+/**
  * ADR 0005 order: upload immutable artifact first, verify, then activate pointer.
  * Activation is caller's responsibility (Postgres PageRelease) after put succeeds.
  */

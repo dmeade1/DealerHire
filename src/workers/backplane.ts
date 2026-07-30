@@ -20,8 +20,6 @@ export interface Env {
   ALLOW_UNSIGNED_SYNTHETIC_ACTOR?: string;
   SYNTHETIC_TENANT_ID?: string;
   SYNTHETIC_ROOFTOP_ID?: string;
-  /** Selected PageRelease artifact bucket (G1-04) — optional until binding live. */
-  PUBLIC_ARTIFACTS?: R2Bucket;
 }
 
 const backplane = {
