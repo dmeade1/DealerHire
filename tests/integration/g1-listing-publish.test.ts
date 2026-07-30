@@ -8,7 +8,10 @@ import {
   fetchActivePageRelease,
   rollbackPageRelease,
 } from "@/modules/publication/release";
-import { createR2MemoryArtifactStore } from "@/modules/publication/artifact-store";
+import {
+  getDefaultArtifactStore,
+  resetDefaultArtifactStoreForTests,
+} from "@/modules/publication/artifact-store";
 import {
   effectManifestForPublishPage,
   publishApprovedPage,
@@ -58,14 +61,16 @@ describe("G1-04 listing → audit → approve → PageRelease → public fetch",
   beforeAll(async () => {
     requireIntegrationDb();
     await setupIntegrationDb();
+    resetDefaultArtifactStoreForTests();
     await clearPublishCommands();
   }, 60_000);
 
   afterAll(async () => {
+    resetDefaultArtifactStoreForTests();
     await teardownIntegrationDb();
   });
 
-  it("redeems command+outbox before PageRelease; /jobs/demo reads active manifest", async () => {
+  it("redeems command+outbox before PageRelease; /jobs/demo reads shared artifact store", async () => {
     const audit = auditListing({
       payload: SYNTHETIC_LISTING,
       payMinCents: 2500,
@@ -103,8 +108,8 @@ describe("G1-04 listing → audit → approve → PageRelease → public fetch",
 
     const hiringActor = actorFor(TENANT_A, ROOFTOP_A, "hiring_operations");
     const pubActor = actorFor(TENANT_A, ROOFTOP_A, "publication_disclosure");
+    const artifactStore = getDefaultArtifactStore();
 
-    const artifactStore = createR2MemoryArtifactStore();
     const published = await publishApprovedPage(hiringActor, pubActor, {
       redeem: {
         oneTimeToken: approval.one_time_token as string,
@@ -122,7 +127,6 @@ describe("G1-04 listing → audit → approve → PageRelease → public fetch",
         payDisclosure: "$25.00–$45.00 per hour",
         jobControlVersionId: JCV,
       },
-      artifactStore,
     });
 
     expect(published.command.status).toBe("queued");
@@ -149,6 +153,7 @@ describe("G1-04 listing → audit → approve → PageRelease → public fetch",
     expect(publicJob?.payDisclosure).toMatch(/\$25/);
     expect(publicJob?.bodyHtml).toMatch(/SYNTHETIC/);
     expect(publicJob?.contentAddress).toBe(published.manifest.contentAddress);
+    expect(publicJob?.artifactSource).toBe("r2_memory");
   });
 
   it("G1-05 rolls PageRelease back to prior manifest", async () => {

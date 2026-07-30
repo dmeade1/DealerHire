@@ -38,6 +38,7 @@ const steps: Array<{ name: string; args: string[]; optional?: boolean }> = [
   { name: "outbox-inspect", args: ["outbox:inspect", "--limit", "10"], optional: true },
   { name: "dlq-inspect", args: ["dlq:inspect", "--limit", "10"], optional: true },
   { name: "drain-list", args: ["drain", "--limit", "10"], optional: true },
+  { name: "publish-demo", args: ["publish:demo"], optional: true },
 ];
 
 const gitSha = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();

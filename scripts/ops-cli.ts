@@ -17,7 +17,8 @@ function help() {
   console.log(`DealerHire ops CLI
 
 Commands:
-  health              Print local health summary
+  health              Print local health summary (+ DB / demo PageRelease when DATABASE_URL set)
+  publish:demo        SYNTHETIC G1-04: audit → approve → PageRelease → /jobs/demo
   kill-switch         Persist emergency pause/resume (requires DATABASE_URL)
   kill-switch:status  Read durable kill-switch state
   outbox:inspect      List recent outbox events (OPS_CONTROL_SECRET; signed actor optional)
@@ -61,14 +62,51 @@ async function main() {
   }
 
   if (cmd === "health") {
+    const summary: Record<string, unknown> = {
+      service: "ops-cli",
+      candidateAiMode: process.env.CANDIDATE_AI_MODE ?? "shadow",
+      adActuationEnabled: process.env.AD_ACTUATION_ENABLED === "true",
+      smsEnabled: false,
+      authMode: process.env.DH_AUTH_MODE ?? "hmac-g1",
+      databaseConfigured: Boolean(process.env.DATABASE_URL),
+      opsControlConfigured: Boolean(process.env.OPS_CONTROL_SECRET),
+      demoPageReleaseActive: null as boolean | null,
+    };
+    if (process.env.DATABASE_URL) {
+      try {
+        const { loadPublicJobBySlug } = await import(
+          "../src/modules/publication/public-read"
+        );
+        const job = await loadPublicJobBySlug("demo");
+        summary.demoPageReleaseActive = Boolean(job);
+        if (job) {
+          summary.demoArtifactSource = job.artifactSource;
+          summary.demoContentAddress = job.contentAddress;
+        }
+      } catch {
+        summary.demoPageReleaseActive = false;
+      }
+    }
+    console.log(JSON.stringify(summary, null, 2));
+    return;
+  }
+
+  if (cmd === "publish:demo") {
+    if (!process.env.DATABASE_URL) {
+      console.error("DATABASE_URL required");
+      process.exit(1);
+    }
+    const { publishSyntheticDemoPage } = await import(
+      "../src/modules/publication/publish-demo"
+    );
+    const result = await publishSyntheticDemoPage();
     console.log(
       JSON.stringify(
         {
-          service: "ops-cli",
-          candidateAiMode: process.env.CANDIDATE_AI_MODE ?? "shadow",
-          adActuationEnabled: process.env.AD_ACTUATION_ENABLED === "true",
-          smsEnabled: false,
-          authMode: process.env.DH_AUTH_MODE ?? "hmac-g1",
+          ok: true,
+          SYNTHETIC: true,
+          ...result,
+          note: "Process-local memory artifact store until R2 PUBLIC_ARTIFACTS Selected. Re-run after Next restart if artifactSource is page_release_manifest.",
         },
         null,
         2,

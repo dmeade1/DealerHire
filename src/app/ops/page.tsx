@@ -47,6 +47,13 @@ export default async function OpsPage() {
         <li>
           <Link href="/ops/drain">Envelope drain (queue-down)</Link>
         </li>
+        <li>
+          <Link href="/jobs/demo">Public demo job (PageRelease)</Link> — refresh via{" "}
+          <code>pnpm ops publish:demo</code>
+        </li>
+        <li>
+          <Link href="/healthz">/healthz</Link>
+        </li>
       </ul>
 
       <section aria-labelledby="kill-status-heading">

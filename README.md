@@ -7,7 +7,7 @@ Automotive labor intelligence platform — Cloudflare-hosted modular monolith wi
 | Gate | Status |
 | --- | --- |
 | G0 Implementation-ready | Partial — synthetic partner + docs complete; **live NY partner not selected** |
-| G1 No-PII skeleton | In progress in this repo (domain modules, schema, UI shells, unit tests) |
+| G1 No-PII skeleton | Mostly Pass — CF claim/R2 + owner sign-off remain Partial (see `docs/gates/G1-no-pii-skeleton.md`) |
 | G2 Live-PII | Foundation code present; closed to live applicants until evidence pack passes |
 | G3 Beta | Blocked on live partner + **all role-family acceptance** |
 | Candidate AI | **Shadow-only** |
@@ -45,6 +45,7 @@ Ops CLI (loads `.env` automatically):
 
 ```bash
 pnpm ops health
+pnpm ops publish:demo   # SYNTHETIC G1-04 PageRelease → /jobs/demo
 pnpm ops roles
 pnpm ops liveness
 pnpm ops kill-switch:status
@@ -53,7 +54,10 @@ pnpm ops outbox:inspect --limit 20
 pnpm ops kill-switch --scope intake --reason "SYNTHETIC drill" --actor-token … --actor-sig …
 ```
 
-See `docs/gates/g1-ops-demo-script.md` for the recovery walkthrough.
+Publication walkthrough: [`docs/gates/g1-04-publication-runbook.md`](docs/gates/g1-04-publication-runbook.md).  
+Recovery walkthrough: [`docs/gates/g1-ops-demo-script.md`](docs/gates/g1-ops-demo-script.md).
+
+Liveness: `GET /healthz` (Next) and Worker `GET /health` (preview stubs).
 
 ## Repository layout
 
