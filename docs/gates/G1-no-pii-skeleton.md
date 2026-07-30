@@ -15,7 +15,7 @@ Tenant/rooftop/team identity → forced tenant/purpose boundary → requirements
 | ID | Criterion | INV | Status | Evidence |
 | --- | --- | --- | --- | --- |
 | G1-01 | Clean-clone install, lint, typecheck, unit tests pass | — | **Pass** | Local `pnpm verify`; CI on `main`: https://github.com/dmeade1/DealerHire/actions/runs/30504876138 (`verify` + `integration`) |
-| G1-02 | Preview deploy of platform-web + intake-api + backplane configs | ADR 0001 | **Pass** | Temp preview Deadpan Kosmoceratops (2026-07-30): `/health` ok on platform-web, intake-api, backplane; claim ≤60m: `https://dash.cloudflare.com/claim-preview?claimToken=tJXayb5B914PO9xPPX-a0fXa15LreHEuIPI3gLEOCew`; Next `/healthz` local; OpenNext still not Selected for full `/jobs` on Workers |
+| G1-02 | Preview deploy of platform-web + intake-api + backplane configs | ADR 0001 | **Pass** | Temp preview Deadpan Kosmoceratops (2026-07-30): `/health` ok — `https://dealerhire-platform-web.deadpan-kosmoceratops.workers.dev/health`, `…intake-api…/health`, `…backplane…/health`; claim URL is ephemeral (from `wrangler deploy --temporary`, not committed); Next `/healthz` local; OpenNext still not Selected for full `/jobs` on Workers |
 | G1-03 | Forced RLS / missing-context denial proven in integration tests | INV-07, INV-08 | **Pass** | `rls-isolation.test.ts` + FORCE RLS migrations; green on main CI 30504876138 |
 | G1-04 | Synthetic listing → audit → approve → PageRelease → public fetch | INV-14–18 | Partial | Shared default store + `artifactSource` assertion in integration; `pnpm ops publish:demo`; runbook `g1-04-publication-runbook.md`; R2 adapter unit-tested; **live R2 binding still Pending** (permanent CF account) |
 | G1-05 | PageRelease rollback to prior manifest | INV-15, RC-06 | **Pass** | `g1-listing-publish.test.ts` activate v2 → rollback → v1; green on main CI |
@@ -35,7 +35,7 @@ Tenant/rooftop/team identity → forced tenant/purpose boundary → requirements
 
 | Blocker | Gate IDs | Owner / note |
 | --- | --- | --- |
-| Claim permanent Cloudflare account (Deadpan Kosmoceratops; claim ≤60m from deploy) | G1-04 (R2) | Claim URL in G1-02 evidence; R2 unsupported on temp accounts |
+| Claim permanent Cloudflare account (Deadpan Kosmoceratops; claim ≤60m from last `--temporary` deploy) | G1-04 (R2) | Claim URL printed by wrangler only (never commit tokens); R2 unsupported on temp accounts |
 | Live R2 `PUBLIC_ARTIFACTS` Selected + wire `setDefaultArtifactStore` | G1-04 | Permanent CF account; see `g1-04-publication-runbook.md` |
 | Formal threat-model + fixture sign-off | G1-15, G1-16 | Program owner / security — checklist below |
 
