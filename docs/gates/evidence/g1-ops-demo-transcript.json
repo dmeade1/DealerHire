@@ -1,6 +1,6 @@
 {
-  "capturedAt": "2026-07-30T11:44:14.669Z",
-  "gitSha": "ca33c228b9d7850f90d7599bd391e219f2f156b0",
+  "capturedAt": "2026-07-30T11:47:53.040Z",
+  "gitSha": "d8464278840c22ba980fe00ee99dc78791dbff60",
   "script": "docs/gates/g1-ops-demo-script.md",
   "steps": {
     "health": {
@@ -9,9 +9,9 @@
       "stderr": ""
     },
     "kill-switch-status": {
-      "ok": false,
-      "stdout": "\n> dealerhire@0.1.0 ops /Users/drew/Developer/DealerHire\n> node --import tsx scripts/ops-cli.ts \"kill-switch:status\"\n\n ELIFECYCLE  Command failed with exit code 1.\n",
-      "stderr": "ops_control_secret_unconfigured\n"
+      "ok": true,
+      "stdout": "\n> dealerhire@0.1.0 ops /Users/drew/Developer/DealerHire\n> node --import tsx scripts/ops-cli.ts \"kill-switch:status\"\n\n{\n  \"switches\": [\n    {\n      \"scope\": \"all_execution\",\n      \"paused\": false,\n      \"reason\": \"test cleanup\",\n      \"actorSubjectRef\": \"ops:test-cleanup\",\n      \"updatedAt\": \"2026-07-30T11:44:11.000Z\"\n    },\n    {\n      \"scope\": \"campaigns\",\n      \"paused\": false,\n      \"reason\": \"default\",\n      \"actorSubjectRef\": \"system\",\n      \"updatedAt\": \"2026-07-29T00:37:38.000Z\"\n    },\n    {\n      \"scope\": \"intake\",\n      \"paused\": false,\n      \"reason\": \"test cleanup\",\n      \"actorSubjectRef\": \"ops:test-cleanup\",\n      \"updatedAt\": \"2026-07-30T11:44:11.000Z\"\n    }\n  ],\n  \"durable\": true\n}\n",
+      "stderr": ""
     },
     "liveness": {
       "ok": true,
@@ -19,19 +19,19 @@
       "stderr": ""
     },
     "outbox-inspect": {
-      "ok": false,
-      "stdout": "\n> dealerhire@0.1.0 ops /Users/drew/Developer/DealerHire\n> node --import tsx scripts/ops-cli.ts \"outbox:inspect\" \"--limit\" \"10\"\n\n ELIFECYCLE  Command failed with exit code 1.\n",
-      "stderr": "ops_control_secret_unconfigured\n"
+      "ok": true,
+      "stdout": "\n> dealerhire@0.1.0 ops /Users/drew/Developer/DealerHire\n> node --import tsx scripts/ops-cli.ts \"outbox:inspect\" \"--limit\" \"10\"\n\n{\n  \"count\": 10,\n  \"rows\": [\n    {\n      \"id\": \"b5e0e582-7e58-40d6-95eb-bed163680530\",\n      \"tenant_id\": \"00000000-0000-4000-8000-000000000001\",\n      \"rooftop_id\": \"00000000-0000-4000-8000-000000000002\",\n      \"aggregate_type\": \"dead_letter\",\n      \"aggregate_id\": \"43e697a2-b182-4399-9b7c-675f9a11492f\",\n      \"event_type\": \"application.accepted\",\n      \"payload\": {\n        \"SYNTHETIC\": true,\n        \"envelopeId\": \"00000000-0000-4000-8000-00000000dl01\"\n      },\n      \"created_at\": \"2026-07-30T11:44:13.754Z\",\n      \"published_at\": null\n    },\n    {\n      \"id\": \"790b825e-97b2-4d94-99f5-a054fd8f5872\",\n      \"tenant_id\": \"00000000-0000-4000-8000-000000000001\",\n      \"rooftop_id\": \"00000000-0000-4000-8000-000000000002\",\n      \"aggregate_type\": \"ops_audit\",\n      \"aggregate_id\": \"43e697a2-b182-4399-9b7c-675f9a11492f\",\n      \"event_type\": \"ops.dlq_retry\",\n      \"payload\": {\n        \"outboxId\": \"b5e0e582-7e58-40d6-95eb-bed163680530\",\n        \"messageType\": \"application.accepted\",\n        \"deadLetterId\": \"43e697a2-b182-4399-9b7c-675f9a11492f\",\n        \"actorSubjectRef\": \"ops:integration-dlq\"\n      },\n      \"created_at\": \"2026-07-30T11:44:13.754Z\",\n      \"published_at\": null\n    },\n    {\n      \"id\": \"f4704c79-975e-4ded-a121-e2f6d127f83d\",\n      \"tenant_id\": \"00000000-0000-4000-8000-000000000001\",\n      \"rooftop_id\": \"00000000-0000-4000-8000-000000000002\",\n      \"aggregate_type\": \"command\",\n      \"aggregate_id\": \"972a74c9-0f16-4af0-ae44-d2771022c994\",\n      \"event_type\": \"command.needs_reconciliation\",\n      \"payload\": {\n        \"reason\": \"provider_timeout\",\n        \"synthetic\": true\n      },\n      \"created_at\": \"2026-07-30T11:44:13.211Z\",\n      \"published_at\": null\n    },\n    {\n      \"id\": \"4411b423-9714-4f7b-9372-33c85ad3b133\",\n      \"tenant_id\": \"00000000-0000-4000-8000-000000000001\",\n      \"rooftop_id\": \"00000000-0000-4000-8000-000000000002\",\n      \"aggregate_type\": \"command\",\n      \"aggregate_id\": \"972a74c9-0f16-4af0-ae44-d2771022c994\",\n      \"event_type\": \"command.queued\",\n      \"payload\": {\n        \"lever\": \"ops_board_probe\",\n        \"commandId\": \"972a74c9-0f16-4af0-ae44-d2771022c994\",\n        \"payloadHash\": \"03eafa916537cbc62c1f0ce023a66bc86f721732e4e886c8d3f9a2bcd4e1cf22\"\n      },\n      \"created_at\": \"2026-07-30T11:44:13.202Z\",\n      \"published_at\": null\n    },\n    {\n      \"id\": \"682764b3-1edf-4cc7-afae-14534adf67ed\",\n      \"tenant_id\": \"00000000-0000-4000-8000-000000000001\",\n      \"rooftop_id\": \"00000000-0000-4000-8000-000000000002\",\n      \"aggregate_type\": \"command\",\n      \"aggregate_id\": \"1c590e78-8369-4677-b659-71fa146c7e87\",\n      \"event_type\": \"command.queued\",\n      \"payload\": {\n        \"lever\": \"publish\",\n        \"commandId\": \"1c590e78-8369-4677-b659-71fa146c7e87\",\n        \"payloadHash\": \"12fe21ffabb0eaa688bab4bd2b75259ba65e770b3b226d40b954401ab92673a4\"\n      },\n      \"created_at\": \"2026-07-30T11:44:12.979Z\",\n      \"published_at\": null\n    },\n    {\n      \"id\": \"76ddd1f6-43aa-4399-b24f-c3660f5a2f64\",\n      \"tenant_id\": \"00000000-0000-4000-8000-000000000001\",\n      \"rooftop_id\": \"00000000-0000-4000-8000-000000000002\",\n      \"aggregate_type\": \"command\",\n      \"aggregate_id\": \"f8b75c45-2c12-4fec-aa3c-b02cd206ad65\",\n      \"event_type\": \"command.needs_reconciliation\",\n      \"payload\": {\n        \"reason\": \"provider_timeout\",\n        \"drillId\": \"057b8cbb-3141-4cf8-a5f7-3d9e1632cd27\",\n        \"synthetic\": true\n      },\n      \"created_at\": \"2026-07-30T11:44:12.771Z\",\n      \"published_at\": null\n    },\n    {\n      \"id\": \"c188e5a2-7aeb-4489-931f-468cee9bf80e\",\n      \"tenant_id\": \"00000000-0000-4000-8000-000000000001\",\n      \"rooftop_id\": \"00000000-0000-4000-8000-000000000002\",\n      \"aggregate_type\": \"command\",\n      \"aggregate_id\": \"f8b75c45-2c12-4fec-aa3c-b02cd206ad65\",\n      \"event_type\": \"command.queued\",\n      \"payload\": {\n        \"lever\": \"publish\",\n        \"commandId\": \"f8b75c45-2c12-4fec-aa3c-b02cd",
+      "stderr": ""
     },
     "dlq-inspect": {
-      "ok": false,
-      "stdout": "\n> dealerhire@0.1.0 ops /Users/drew/Developer/DealerHire\n> node --import tsx scripts/ops-cli.ts \"dlq:inspect\" \"--limit\" \"10\"\n\n ELIFECYCLE  Command failed with exit code 1.\n",
-      "stderr": "ops_control_secret_unconfigured\n"
+      "ok": true,
+      "stdout": "\n> dealerhire@0.1.0 ops /Users/drew/Developer/DealerHire\n> node --import tsx scripts/ops-cli.ts \"dlq:inspect\" \"--limit\" \"10\"\n\n{\n  \"count\": 0,\n  \"rows\": [],\n  \"actorSubjectRef\": \"ops:cli-dlq-inspect\"\n}\n",
+      "stderr": ""
     },
     "drain-list": {
-      "ok": false,
-      "stdout": "\n> dealerhire@0.1.0 ops /Users/drew/Developer/DealerHire\n> node --import tsx scripts/ops-cli.ts \"drain\" \"--limit\" \"10\"\n\n ELIFECYCLE  Command failed with exit code 1.\n",
-      "stderr": "ops_control_secret_unconfigured\n"
+      "ok": true,
+      "stdout": "\n> dealerhire@0.1.0 ops /Users/drew/Developer/DealerHire\n> node --import tsx scripts/ops-cli.ts \"drain\" \"--limit\" \"10\"\n\n{\n  \"count\": 0,\n  \"rows\": [],\n  \"mode\": \"list\"\n}\n",
+      "stderr": ""
     }
   }
 }

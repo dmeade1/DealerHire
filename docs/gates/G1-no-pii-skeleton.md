@@ -21,13 +21,13 @@ Tenant/rooftop/team identity → forced tenant/purpose boundary → requirements
 | G1-05 | PageRelease rollback to prior manifest | INV-15, RC-06 | **Pass** | `g1-listing-publish.test.ts` activate v2 → rollback → v1; green on main CI |
 | G1-06 | Approval + Command + outbox atomicity; provider call outside txn | INV-19–20 | **Pass** | `approval-command-outbox.test.ts`; `publishApprovedPage` post-commit activate; green on main CI |
 | G1-07 | Ambiguous timeout → NeedsReconciliation; no blind recreate | INV-21, RC-08 | **Pass** | Fixtures + resolve + `/ops/reconciliation`; green on main CI |
-| G1-08 | Synthetic envelope accept + queue-down replay converges; no dupes | INV-11–13, RC-03 | Partial | Envelope project + `ops-drain.test.ts` + `/ops/drain` + CLI `pnpm ops drain`; mark Pass when demo evidence committed |
+| G1-08 | Synthetic envelope accept + queue-down replay converges; no dupes | INV-11–13, RC-03 | **Pass** | Envelope project + `ops-drain.test.ts` + `/ops/drain` + CLI; evidence `docs/gates/evidence/g1-ops-demo-transcript.json` (drain-list ok @ d846427) |
 | G1-09 | Inbox dedupe + schema/message N/N−1 compatibility | INV-39 | **Pass** | Envelope idempotency + `messaging/inbox` N/N−1 unit tests + backplane parse; green in CI verify |
 | G1-10 | Liveness Fresh/ObservedZero/Missing/Stale; abstain vs halt | INV-23 | **Pass** | `liveness.test.ts` + `/ops/liveness` + CLI; green on main CI |
 | G1-11 | Telemetry contains **zero** applicant PII (synthetic scan) | INV-37 | Partial | `emitSafeEvent` + `pnpm scan:pii` green in CI; live sink redaction review still Pending |
-| G1-12 | Audited ops CLI/page: inspect, DLQ/outbox replay, safe retry | INV-38 | Partial | Outbox + DLQ + `/ops/recovery` + drain; `pnpm ops:demo-evidence` → `docs/gates/evidence/`; screenshots / program walkthrough still optional |
+| G1-12 | Audited ops CLI/page: inspect, DLQ/outbox replay, safe retry | INV-38 | **Pass** | Outbox + DLQ + `/ops/recovery` + drain; full CLI walkthrough in `docs/gates/evidence/g1-ops-demo-transcript.json` (all steps ok @ d846427) |
 | G1-13 | Kill switches for intake and campaigns smoke-tested | INV-51, RC-15–16 | **Pass** | Durable store + API/CLI + `/ops`; `kill-switch.test.ts`; green on main CI |
-| G1-14 | SBOM, digests, SAST/deps/secrets, rollback target in CI | ADR 0010 | Partial | SBOM + gitleaks + audit + eslint + `pnpm rollback:drill` + CodeQL workflow; Pass when CodeQL + rollback artifacts green on main |
+| G1-14 | SBOM, digests, SAST/deps/secrets, rollback target in CI | ADR 0010 | **Pass** | Main CI https://github.com/dmeade1/DealerHire/actions/runs/30539921727 (SBOM + gitleaks + audit + eslint + rollback drill) + CodeQL https://github.com/dmeade1/DealerHire/actions/runs/30539921743 |
 | G1-15 | Threat model reviewed for skeleton surfaces | threat-model | Partial | Engineering attestation in `docs/threat-model.md` (2026-07-30); formal owner/security sign-off still Pending |
 | G1-16 | All synthetic data labeled `SYNTHETIC` | partners | Partial | Seed/demos + `pnpm scan:pii` asserts dossier `SYNTHETIC` + `NO LIVE PARTNER SELECTED`; program owner cross-check sign-off still Pending |
 
@@ -37,8 +37,6 @@ Tenant/rooftop/team identity → forced tenant/purpose boundary → requirements
 | --- | --- | --- |
 | Claim permanent Cloudflare account (temp account Misty Warlock) | G1-02, G1-04 | Claim URL from latest `wrangler deploy --temporary` (chat); then Selected R2 |
 | Live R2 `PUBLIC_ARTIFACTS` Selected + uncomment wrangler binding | G1-04 | Permanent CF account (R2 not on temp accounts) |
-| Ops demo transcript committed + optional screenshots | G1-08, G1-12 | `pnpm ops:demo-evidence` with local DB/secrets |
-| CodeQL + rollback drill green on `main` | G1-14 | Workflows added this pass |
 | Formal threat-model + fixture sign-off | G1-15, G1-16 | Program owner / security |
 | Live sink redaction review | G1-11 | Observability Selected |
 
