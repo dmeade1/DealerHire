@@ -14,7 +14,7 @@ Tenant/rooftop/team identity → forced tenant/purpose boundary → requirements
 
 | ID | Criterion | INV | Status | Evidence |
 | --- | --- | --- | --- | --- |
-| G1-01 | Clean-clone install, lint, typecheck, unit tests pass | — | Partial | Local + CI green on `feat/g1-walking-skeleton`: https://github.com/dmeade1/DealerHire/actions/runs/30504738100 (`verify` + `integration`); Pass when same green on `main` after merge |
+| G1-01 | Clean-clone install, lint, typecheck, unit tests pass | — | **Pass** | Local `pnpm verify`; CI on `main`: https://github.com/dmeade1/DealerHire/actions/runs/30504876138 (`verify` + `integration`) |
 | G1-02 | Preview deploy of platform-web + intake-api + backplane configs | ADR 0001 | Partial | Temporary preview (claim within 60m): `https://dealerhire-platform-web.grizzled-rosehip.workers.dev/health`, `https://dealerhire-intake-api.grizzled-rosehip.workers.dev/health`, `https://dealerhire-backplane.grizzled-rosehip.workers.dev/health` — all return ok; permanent URLs after claim + `wrangler login` |
 | G1-03 | Forced RLS / missing-context denial proven in integration tests | INV-07, INV-08 | Partial | `rls-isolation.test.ts` (missing context, cross-tenant/rooftop, wrong purpose, page_releases + commands isolation); FORCE RLS migrations |
 | G1-04 | Synthetic listing → audit → approve → PageRelease → public fetch | INV-14–18 | Partial | put-before-activate via default memory store + `createR2BucketArtifactStore` (unit-tested); `/jobs` prefers content-addressed body + sanitized HTML; live Cloudflare R2 binding still Pending (wrangler commented) |
@@ -39,7 +39,7 @@ Tenant/rooftop/team identity → forced tenant/purpose boundary → requirements
 | Live R2 PageRelease artifact binding (adapter ready; binding not Selected) | G1-04 | Uncomment wrangler `PUBLIC_ARTIFACTS` when bucket Selected |
 | Formal threat-model + fixture sign-off | G1-15, G1-16 | Program owner / partners |
 | Ops demo recording / screenshots linked as evidence | G1-12 | Operator walkthrough of `g1-ops-demo-script.md` |
-| Green `verify` + integration on `main` (merge branch) | G1-01 | Branch CI green: https://github.com/dmeade1/DealerHire/actions/runs/30504738100 |
+| ~~Green CI on main~~ | G1-01 | **Cleared** — https://github.com/dmeade1/DealerHire/actions/runs/30504876138 |
 
 **Engineering advanced (2026-07-29/30):** G1-09/12/04 eng; G0 hygiene; repo publicized to unlock Actions; temporary CF Worker previews (G1-02 Partial); CI verify+integration green on branch. Remaining: claim CF account + Selected R2, merge to main, sign-offs, demo recording. **Do not** pull G2 live PII until this list clears or is Waived.
 
