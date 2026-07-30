@@ -16,11 +16,13 @@ Synthetic skeleton only — no live PII, no live ads.
 3. **Resume** — `/ops` resume form or CLI `--resume` with reason + signed actor.
 4. **Outbox inspect** — `pnpm ops outbox:inspect --limit 20` (OPS_CONTROL_SECRET; no break-glass).
 5. **DLQ / recovery board** — open `/ops/recovery`; `pnpm ops dlq:inspect --limit 20`. Safe retry: `pnpm ops dlq:retry --id <uuid>` (signed actor).
-6. **NeedsReconciliation** — open `/ops/reconciliation`; open commands table must not offer blind recreate. Resolve via read-back + `resolveNeedsReconciliation` in code/tests.
-7. **Safe replay** — `pnpm ops outbox:replay --id <uuid>` with signed actor on `command.queued` only when queued/executing; expect refusal under `needs_reconciliation`.
-8. **Liveness** — `/ops/liveness` or `pnpm ops liveness` shows `source_liveness` with advise/pause.
+6. **Envelope drain** — open `/ops/drain`; `pnpm ops drain --limit 20`; apply with `pnpm ops drain --apply` (subject_permission projection).
+7. **NeedsReconciliation** — open `/ops/reconciliation`; open commands table must not offer blind recreate. Resolve via read-back + `resolveNeedsReconciliation` in code/tests.
+8. **Safe replay** — `pnpm ops outbox:replay --id <uuid>` with signed actor on `command.queued` only when queued/executing; expect refusal under `needs_reconciliation`.
+9. **Liveness** — `/ops/liveness` or `pnpm ops liveness` shows `source_liveness` with advise/pause.
+10. **Capture transcript** — `pnpm ops:demo-evidence` writes `docs/gates/evidence/g1-ops-demo-transcript.json`.
 
 ## Evidence
 
-- Record terminal output + screenshot of `/ops`, `/ops/recovery`, `/ops/reconciliation`, `/ops/liveness`.
-- Link artifacts from the PR or gate evidence folder when available.
+- Record terminal output + screenshot of `/ops`, `/ops/recovery`, `/ops/drain`, `/ops/reconciliation`, `/ops/liveness`.
+- Commit or attach `docs/gates/evidence/g1-ops-demo-transcript.json` from `pnpm ops:demo-evidence`.

@@ -1,0 +1,37 @@
+{
+  "capturedAt": "2026-07-30T11:44:14.669Z",
+  "gitSha": "ca33c228b9d7850f90d7599bd391e219f2f156b0",
+  "script": "docs/gates/g1-ops-demo-script.md",
+  "steps": {
+    "health": {
+      "ok": true,
+      "stdout": "\n> dealerhire@0.1.0 ops /Users/drew/Developer/DealerHire\n> node --import tsx scripts/ops-cli.ts \"health\"\n\n{\n  \"service\": \"ops-cli\",\n  \"candidateAiMode\": \"shadow\",\n  \"adActuationEnabled\": false,\n  \"smsEnabled\": false,\n  \"authMode\": \"hmac-g1\"\n}\n",
+      "stderr": ""
+    },
+    "kill-switch-status": {
+      "ok": false,
+      "stdout": "\n> dealerhire@0.1.0 ops /Users/drew/Developer/DealerHire\n> node --import tsx scripts/ops-cli.ts \"kill-switch:status\"\n\n ELIFECYCLE  Command failed with exit code 1.\n",
+      "stderr": "ops_control_secret_unconfigured\n"
+    },
+    "liveness": {
+      "ok": true,
+      "stdout": "\n> dealerhire@0.1.0 ops /Users/drew/Developer/DealerHire\n> node --import tsx scripts/ops-cli.ts \"liveness\"\n\n{\n  \"analyticalStale\": \"abstain\",\n  \"safetyCriticalStale\": \"pause\",\n  \"states\": [\n    \"fresh\",\n    \"observed_zero\",\n    \"missing\",\n    \"stale\"\n  ],\n  \"sources\": [\n    {\n      \"sourceKey\": \"campaign.csv.meta\",\n      \"state\": \"missing\",\n      \"advisory\": \"abstain\",\n      \"execution\": \"pause\",\n      \"updatedAt\": \"2026-07-30T11:44:13.921Z\"\n    },\n    {\n      \"sourceKey\": \"intake.envelope\",\n      \"state\": \"fresh\",\n      \"advisory\": \"advise\",\n      \"execution\": \"continue\",\n      \"updatedAt\": \"2026-07-30T11:44:13.943Z\"\n    }\n  ]\n}\n",
+      "stderr": ""
+    },
+    "outbox-inspect": {
+      "ok": false,
+      "stdout": "\n> dealerhire@0.1.0 ops /Users/drew/Developer/DealerHire\n> node --import tsx scripts/ops-cli.ts \"outbox:inspect\" \"--limit\" \"10\"\n\n ELIFECYCLE  Command failed with exit code 1.\n",
+      "stderr": "ops_control_secret_unconfigured\n"
+    },
+    "dlq-inspect": {
+      "ok": false,
+      "stdout": "\n> dealerhire@0.1.0 ops /Users/drew/Developer/DealerHire\n> node --import tsx scripts/ops-cli.ts \"dlq:inspect\" \"--limit\" \"10\"\n\n ELIFECYCLE  Command failed with exit code 1.\n",
+      "stderr": "ops_control_secret_unconfigured\n"
+    },
+    "drain-list": {
+      "ok": false,
+      "stdout": "\n> dealerhire@0.1.0 ops /Users/drew/Developer/DealerHire\n> node --import tsx scripts/ops-cli.ts \"drain\" \"--limit\" \"10\"\n\n ELIFECYCLE  Command failed with exit code 1.\n",
+      "stderr": "ops_control_secret_unconfigured\n"
+    }
+  }
+}

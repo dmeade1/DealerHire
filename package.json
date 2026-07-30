@@ -26,6 +26,8 @@
     "ops": "node --import tsx scripts/ops-cli.ts",
     "scan:pii": "node --import tsx scripts/scan-synthetic-pii.ts",
     "sbom": "node --import tsx scripts/sbom.ts",
+    "rollback:drill": "node --import tsx scripts/rollback-drill.ts",
+    "ops:demo-evidence": "node --import tsx scripts/g1-ops-demo-evidence.ts",
     "ci:local": "bash scripts/ci-local.sh",
     "verify": "pnpm typecheck && pnpm lint && pnpm test && pnpm db:migrate:check && pnpm scan:pii && pnpm build"
   },

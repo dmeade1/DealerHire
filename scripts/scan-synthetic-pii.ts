@@ -84,6 +84,16 @@ const checks: Array<{ file: string; forbid?: RegExp; require?: RegExp; message: 
     forbid: /app_demo_001/,
     message: "demo applicant shell must not invent app_demo_001 as live inventory",
   },
+  {
+    file: "docs/partners/ny-design-partner-dossier.md",
+    require: /SYNTHETIC/,
+    message: "partner dossier must label SYNTHETIC fixtures (G1-16)",
+  },
+  {
+    file: "docs/partners/ny-design-partner-dossier.md",
+    require: /NO LIVE PARTNER SELECTED/,
+    message: "partner dossier must not silently claim live partner selection (G1-16)",
+  },
 ];
 
 const RUNTIME_NO_CONSOLE_DIRS = [

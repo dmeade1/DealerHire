@@ -44,6 +44,9 @@ export default async function OpsPage() {
         <li>
           <Link href="/ops/recovery">Inspect / DLQ / outbox</Link>
         </li>
+        <li>
+          <Link href="/ops/drain">Envelope drain (queue-down)</Link>
+        </li>
       </ul>
 
       <section aria-labelledby="kill-status-heading">
