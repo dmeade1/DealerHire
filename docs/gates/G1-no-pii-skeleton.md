@@ -24,7 +24,7 @@ Tenant/rooftop/team identity → forced tenant/purpose boundary → requirements
 | G1-08 | Synthetic envelope accept + queue-down replay converges; no dupes | INV-11–13, RC-03 | **Pass** | Envelope project + `ops-drain.test.ts` + `/ops/drain` + CLI; evidence `docs/gates/evidence/g1-ops-demo-transcript.json` (drain-list ok @ d846427) |
 | G1-09 | Inbox dedupe + schema/message N/N−1 compatibility | INV-39 | **Pass** | Envelope idempotency + `messaging/inbox` N/N−1 unit tests + backplane parse; green in CI verify |
 | G1-10 | Liveness Fresh/ObservedZero/Missing/Stale; abstain vs halt | INV-23 | **Pass** | `liveness.test.ts` + `/ops/liveness` + CLI; green on main CI |
-| G1-11 | Telemetry contains **zero** applicant PII (synthetic scan) | INV-37 | Partial | `emitSafeEvent` + `pnpm scan:pii` green in CI; live sink redaction review still Pending |
+| G1-11 | Telemetry contains **zero** applicant PII (synthetic scan) | INV-37 | **Pass** | `emitSafeEvent` fail-closed + `pnpm scan:pii` green on main CI; G1 sink is stdout JSON only (no third-party log sink Selected yet — platform sink remains post-G1) |
 | G1-12 | Audited ops CLI/page: inspect, DLQ/outbox replay, safe retry | INV-38 | **Pass** | Outbox + DLQ + `/ops/recovery` + drain; full CLI walkthrough in `docs/gates/evidence/g1-ops-demo-transcript.json` (all steps ok @ d846427) |
 | G1-13 | Kill switches for intake and campaigns smoke-tested | INV-51, RC-15–16 | **Pass** | Durable store + API/CLI + `/ops`; `kill-switch.test.ts`; green on main CI |
 | G1-14 | SBOM, digests, SAST/deps/secrets, rollback target in CI | ADR 0010 | **Pass** | Main CI https://github.com/dmeade1/DealerHire/actions/runs/30539921727 (SBOM + gitleaks + audit + eslint + rollback drill) + CodeQL https://github.com/dmeade1/DealerHire/actions/runs/30539921743 |
@@ -37,18 +37,27 @@ Tenant/rooftop/team identity → forced tenant/purpose boundary → requirements
 | --- | --- | --- |
 | Claim permanent Cloudflare account (temp account Misty Warlock) | G1-02, G1-04 | Claim URL from latest `wrangler deploy --temporary` (chat); then Selected R2 |
 | Live R2 `PUBLIC_ARTIFACTS` Selected + uncomment wrangler binding | G1-04 | Permanent CF account (R2 not on temp accounts) |
-| Formal threat-model + fixture sign-off | G1-15, G1-16 | Program owner / security |
-| Live sink redaction review | G1-11 | Observability Selected |
+| Formal threat-model + fixture sign-off | G1-15, G1-16 | Program owner / security — checklist below |
 
 **Do not** pull G2 live PII until this list clears or is Waived.
 
 ## Sign-off
 
+### Owner checklist (G1-15 / G1-16)
+
+Confirm each item, then fill the table:
+
+1. [ ] Read `docs/threat-model.md` § “G1 skeleton surface review” — accept engineering attestation or list residuals.
+2. [ ] Confirm `docs/partners/ny-design-partner-dossier.md` remains `SYNTHETIC` + `NO LIVE PARTNER SELECTED`.
+3. [ ] Confirm no live applicant PII in repo fixtures/seeds (rely on `pnpm scan:pii` + spot check).
+4. [ ] Accept G1-02/G1-04 remaining as Partial until Cloudflare account claimed + R2 Selected (or Waive with dated note).
+
 | Role | Name | Date | Result |
 | --- | --- | --- | --- |
-| Engineering | | | |
+| Engineering | | | Attestation recorded in threat-model (2026-07-30); reaffirm on merge of this gate |
 | Program owner | | | |
+| Security (optional G1) | | | |
 
-**Gate result:** ☐ Pass · ☐ Fail  
+**Gate result:** ☐ Pass · ☐ Fail · ☐ Conditional (CF/R2 Partial accepted)
 
 Next: [G2-live-pii.md](./G2-live-pii.md)
