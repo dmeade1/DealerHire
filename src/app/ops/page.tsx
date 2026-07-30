@@ -41,6 +41,9 @@ export default async function OpsPage() {
         <li>
           <Link href="/ops/reconciliation">Needs reconciliation</Link>
         </li>
+        <li>
+          <Link href="/ops/recovery">Inspect / DLQ / outbox</Link>
+        </li>
       </ul>
 
       <section aria-labelledby="kill-status-heading">

@@ -4,15 +4,26 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: read
 
 jobs:
   verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
         with:
-          version: 9
+          fetch-depth: 0
+      # version comes from package.json packageManager (avoid dual pin with action-setup)
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -28,20 +39,26 @@ jobs:
       - name: SBOM + provenance
         run: |
           mkdir -p artifacts
-          pnpm list --depth 0 --json > artifacts/sbom-deps.json
+          pnpm sbom
           echo "digest=$(git rev-parse HEAD)" > artifacts/provenance.txt
-          echo "rollback_target=previous-github-actions-artifact" >> artifacts/provenance.txt
-      - name: Secret scan (gitleaks)
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          echo "rollback_target=git:${{ github.sha }}" >> artifacts/provenance.txt
+          echo "workflow_run=${{ github.run_id }}" >> artifacts/provenance.txt
+          echo "ref=${{ github.ref }}" >> artifacts/provenance.txt
+      - name: Secret scan (gitleaks via container)
+        run: |
+          docker run --rm -v "$PWD:/path" zricethezav/gitleaks:v8.21.2 \
+            detect --source=/path --verbose
+      - name: ESLint security hygiene (SAST floor)
+        run: pnpm lint
       - uses: actions/upload-artifact@v4
         with:
-          name: ci-artifacts
+          name: ci-artifacts-${{ github.run_id }}
           path: artifacts/
+          if-no-files-found: error
 
   integration:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     services:
       postgres:
         image: postgres:16-alpine
@@ -59,16 +76,20 @@ jobs:
     env:
       DATABASE_URL_ADMIN: postgres://dealerhire:dealerhire@localhost:5432/dealerhire
       DATABASE_URL: postgres://dealerhire_app:dealerhire_app@localhost:5432/dealerhire
+      CAPABILITY_SECRET: ci-capability-secret-not-for-production
+      OPS_CONTROL_SECRET: ci-ops-control-secret-not-for-production
+      ACCEPTANCE_ENVELOPE_BINDING: local
+      DH_AUTH_MODE: hmac-g1
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        with:
-          version: 9
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
       - name: Install (frozen)
         run: pnpm install --frozen-lockfile
-      - name: Integration tests (RLS)
+      - name: Apply migrations (admin)
+        run: pnpm db:migrate
+      - name: Integration tests (RLS / envelope / ops)
         run: pnpm test:integration

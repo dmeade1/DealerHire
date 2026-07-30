@@ -22,6 +22,8 @@ Commands:
   kill-switch:status  Read durable kill-switch state
   outbox:inspect      List recent outbox events (OPS_CONTROL_SECRET; signed actor optional)
   outbox:replay       Safe requeue (requires signed actor; --break-glass emergency only)
+  dlq:inspect         List open dead-letter rows (OPS_CONTROL_SECRET)
+  dlq:retry           Safe DLQ retry → outbox (signed actor; --break-glass emergency only)
   liveness            Show source liveness semantics (+ DB rows if DATABASE_URL set)
   roles               Show role acceptance blocker
 
@@ -266,6 +268,108 @@ async function main() {
     }
     const result = await withTenantContext(actor, (sql) =>
       safeReplayOutbox(sql, { outboxId, actorSubjectRef }),
+    );
+    console.log(JSON.stringify({ ...result, actorSubjectRef, breakGlass: breakGlassUsed }, null, 2));
+    return;
+  }
+
+  if (cmd === "dlq:inspect" || cmd === "dlq:retry") {
+    if (!process.env.DATABASE_URL) {
+      console.error("DATABASE_URL required");
+      process.exit(1);
+    }
+    const { assertOpsControlSecret, platformOpsActor } = await import(
+      "../src/modules/ops/kill-switch"
+    );
+    try {
+      assertOpsControlSecret(process.env.OPS_CONTROL_SECRET);
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : "ops_control_unauthorized");
+      process.exit(1);
+    }
+
+    const token = flag(args, "--actor-token") ?? process.env.DH_ACTOR_TOKEN;
+    const signature = flag(args, "--actor-sig") ?? process.env.DH_ACTOR_SIG;
+    const breakGlass = args.includes("--break-glass");
+    let actorSubjectRef: string;
+    let breakGlassUsed = false;
+
+    if (cmd === "dlq:inspect") {
+      if (token && signature) {
+        try {
+          const { requireActorFromHeaders } = await import("../src/platform/auth/actor");
+          const actor = requireActorFromHeaders(new Headers(), {
+            kind: "ops",
+            purpose: ["platform_control", "hiring_operations"],
+            capability: "ops.inspect",
+            actorToken: token,
+            actorSignature: signature,
+          });
+          actorSubjectRef = actor.actorSubjectRef;
+        } catch (err) {
+          console.error(err instanceof Error ? err.message : "ops_actor_unauthorized");
+          process.exit(1);
+        }
+      } else {
+        actorSubjectRef = "ops:cli-dlq-inspect";
+      }
+    } else {
+      try {
+        if (token && signature) {
+          const { requireActorFromHeaders } = await import("../src/platform/auth/actor");
+          const actor = requireActorFromHeaders(new Headers(), {
+            kind: "ops",
+            purpose: ["platform_control", "hiring_operations"],
+            capability: "ops.replay",
+            actorToken: token,
+            actorSignature: signature,
+          });
+          actorSubjectRef = actor.actorSubjectRef;
+        } else if (breakGlass) {
+          actorSubjectRef = flag(args, "--actor") ?? "ops:cli-break-glass";
+          breakGlassUsed = true;
+          console.error(
+            JSON.stringify({
+              audit: "ops_cli_dlq_retry_break_glass",
+              break_glass: true,
+              actorSubjectRef,
+              cmd,
+            }),
+          );
+        } else {
+          console.error(
+            "dlq:retry requires signed ops actor (--actor-token + --actor-sig). --break-glass is emergency-only.",
+          );
+          process.exit(1);
+        }
+      } catch (err) {
+        console.error(err instanceof Error ? err.message : "ops_actor_unauthorized");
+        process.exit(1);
+      }
+    }
+
+    const { withTenantContext } = await import("../src/platform/db/client");
+    const { listDeadLetters, safeRetryDeadLetter } = await import("../src/modules/ops/dlq");
+    const actor = {
+      ...platformOpsActor(actorSubjectRef),
+      purpose: "hiring_operations" as const,
+      capabilities: ["ops.pause", "ops.inspect", "ops.replay"],
+    };
+
+    if (cmd === "dlq:inspect") {
+      const limit = Number(flag(args, "--limit") ?? "50");
+      const rows = await withTenantContext(actor, (sql) => listDeadLetters(sql, { limit }));
+      console.log(JSON.stringify({ count: rows.length, rows, actorSubjectRef }, null, 2));
+      return;
+    }
+
+    const deadLetterId = flag(args, "--id");
+    if (!deadLetterId) {
+      console.error("--id <dead-letter-uuid> is required");
+      process.exit(1);
+    }
+    const result = await withTenantContext(actor, (sql) =>
+      safeRetryDeadLetter(sql, { deadLetterId, actorSubjectRef }),
     );
     console.log(JSON.stringify({ ...result, actorSubjectRef, breakGlass: breakGlassUsed }, null, 2));
     return;

@@ -2,6 +2,7 @@
  * backplane — queues, reconciliation, adapters, shadow AI jobs.
  */
 
+import { parseInboxMessage } from "@/modules/messaging/inbox";
 import { applyKillSwitch } from "@/modules/ops/kill-switch";
 import {
   assertOpsHttpAuth,
@@ -19,12 +20,9 @@ export interface Env {
   ALLOW_UNSIGNED_SYNTHETIC_ACTOR?: string;
   SYNTHETIC_TENANT_ID?: string;
   SYNTHETIC_ROOFTOP_ID?: string;
+  /** Selected PageRelease artifact bucket (G1-04) — optional until binding live. */
+  PUBLIC_ARTIFACTS?: R2Bucket;
 }
-
-type QueueMessage = {
-  type: string;
-  [key: string]: unknown;
-};
 
 const backplane = {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -107,14 +105,21 @@ const backplane = {
     return new Response("Not Found", { status: 404 });
   },
 
-  async queue(batch: MessageBatch<QueueMessage>, env: Env): Promise<void> {
+  async queue(batch: MessageBatch<unknown>, env: Env): Promise<void> {
     for (const msg of batch.messages) {
-      if (msg.body.type === "application.accepted") {
+      const parsed = parseInboxMessage(msg.body);
+      if (!parsed.ok) {
+        // Poison: retry until queue max_retries → CF DLQ (INV-39 / RC-09). Never silent-ack.
+        msg.retry();
+        continue;
+      }
+      const type = parsed.message.type;
+      if (type === "application.accepted") {
         // Projection not implemented — retry/DLQ rather than ack-without-processing (INV-12).
         msg.retry();
         continue;
       }
-      if (msg.body.type === "candidate_ai.shadow") {
+      if (type === "candidate_ai.shadow") {
         if (env.CANDIDATE_AI_MODE === "live") {
           msg.retry();
           continue;
@@ -122,7 +127,7 @@ const backplane = {
         msg.ack();
         continue;
       }
-      if (msg.body.type === "ad.actuate") {
+      if (type === "ad.actuate") {
         if (env.AD_ACTUATION_ENABLED !== "true") {
           // Fail closed — do not silent-ack as success; retry until drained or flag enabled.
           msg.retry();
@@ -132,6 +137,7 @@ const backplane = {
         msg.retry();
         continue;
       }
+      // Known but not yet handled in this worker — retry (do not drop).
       msg.retry();
     }
   },
