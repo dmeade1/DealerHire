@@ -1,0 +1,10 @@
+# Gitleaks config — keep CI secret scan honest without false-failing on ephemeral
+# Cloudflare temporary-account claim URLs that briefly landed in gate evidence.
+
+title = "DealerHire"
+
+[allowlist]
+description = "Ephemeral Cloudflare preview claim tokens (not long-lived credentials; do not commit new ones)"
+regexes = [
+  '''claimToken=[A-Za-z0-9_-]+''',
+]
