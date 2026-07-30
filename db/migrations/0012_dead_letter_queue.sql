@@ -33,4 +33,4 @@ CREATE POLICY tenant_rooftop_purpose ON hiring.dead_letter
     AND platform.purpose_allows('hiring_operations')
   );
 
-GRANT SELECT, INSERT, UPDATE, DELETE ON hiring.dead_letter TO dealerhire_app;
+-- App role grants applied by scripts/migrate.ts ensureAppRole (role may not exist yet here).

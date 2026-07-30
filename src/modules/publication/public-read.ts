@@ -37,15 +37,24 @@ export type PublicJobView = {
 export async function loadPublicJobBySlug(slug: string): Promise<PublicJobView | null> {
   const resolved = resolvePublicJobSlug(slug);
   if (!resolved) return null;
+  // Build / CI may prerender without DATABASE_URL — degrade to unavailable, never throw.
+  if (!process.env.DATABASE_URL && !process.env.DATABASE_URL_ADMIN) {
+    return null;
+  }
 
   const actor = publicationReaderActor(resolved.tenantId, resolved.rooftopId);
-  const row = await withTenantContext(actor, (sql) =>
-    fetchActivePageRelease(sql, {
-      tenantId: resolved.tenantId,
-      rooftopId: resolved.rooftopId,
-      jobControlVersionId: resolved.jobControlVersionId,
-    }),
-  );
+  let row: Awaited<ReturnType<typeof fetchActivePageRelease>>;
+  try {
+    row = await withTenantContext(actor, (sql) =>
+      fetchActivePageRelease(sql, {
+        tenantId: resolved.tenantId,
+        rooftopId: resolved.rooftopId,
+        jobControlVersionId: resolved.jobControlVersionId,
+      }),
+    );
+  } catch {
+    return null;
+  }
   if (!row) return null;
 
   const manifest = row.manifest as {
