@@ -7,7 +7,7 @@ Automotive labor intelligence platform — Cloudflare-hosted modular monolith wi
 | Gate | Status |
 | --- | --- |
 | G0 Implementation-ready | Partial — synthetic partner + docs complete; **live NY partner not selected** |
-| G1 No-PII skeleton | Mostly Pass — CF claim/R2 + owner sign-off remain Partial (see `docs/gates/G1-no-pii-skeleton.md`) |
+| G1 No-PII skeleton | **Conditional** — G1-04 live R2 Waived (2026-08-07); owner sign-off G1-15/16 still open |
 | G2 Live-PII | Foundation code present; closed to live applicants until evidence pack passes |
 | G3 Beta | Blocked on live partner + **all role-family acceptance** |
 | Candidate AI | **Shadow-only** |

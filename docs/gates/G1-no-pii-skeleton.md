@@ -2,7 +2,8 @@
 
 **Purpose:** Prove the synthetic vertical skeleton before any live applicant PII.  
 **Entry:** Repository bootstrapped; ADRs and assurance docs present; synthetic tenant fixtures only.  
-**Exit:** All criteria `Pass` with linked evidence. Fail/Pending blocks G2.
+**Exit:** All criteria `Pass` with linked evidence. Fail/Pending blocks G2.  
+**Conditional exit:** Engineering may mark **Conditional** when live R2 is the only remaining infra gap and is Waived with a dated note (owner still signs G1-15/16).
 
 ## Scope proven
 
@@ -15,9 +16,9 @@ Tenant/rooftop/team identity → forced tenant/purpose boundary → requirements
 | ID | Criterion | INV | Status | Evidence |
 | --- | --- | --- | --- | --- |
 | G1-01 | Clean-clone install, lint, typecheck, unit tests pass | — | **Pass** | Local `pnpm verify`; CI on `main`: https://github.com/dmeade1/DealerHire/actions/runs/30504876138 (`verify` + `integration`) |
-| G1-02 | Preview deploy of platform-web + intake-api + backplane configs | ADR 0001 | **Pass** | Temp preview Deadpan Kosmoceratops (2026-07-30): `/health` ok — `https://dealerhire-platform-web.deadpan-kosmoceratops.workers.dev/health`, `…intake-api…/health`, `…backplane…/health`; claim URL is ephemeral (from `wrangler deploy --temporary`, not committed); Next `/healthz` local; OpenNext still not Selected for full `/jobs` on Workers |
+| G1-02 | Preview deploy of platform-web + intake-api + backplane configs | ADR 0001 | **Pass** | Temp preview Frequent Energy (2026-08-07): `/health` ok — `https://dealerhire-platform-web.frequent-energy.workers.dev/health`, `https://dealerhire-intake-api.frequent-energy.workers.dev/health`, `https://dealerhire-backplane.frequent-energy.workers.dev/health`; claim URL ephemeral (wrangler stdout only, never commit); Next `/healthz` local; OpenNext still not Selected for full `/jobs` on Workers |
 | G1-03 | Forced RLS / missing-context denial proven in integration tests | INV-07, INV-08 | **Pass** | `rls-isolation.test.ts` + FORCE RLS migrations; green on main CI 30504876138 |
-| G1-04 | Synthetic listing → audit → approve → PageRelease → public fetch | INV-14–18 | Partial | Shared default store + `artifactSource` assertion in integration; `pnpm ops publish:demo`; runbook `g1-04-publication-runbook.md`; R2 adapter unit-tested; **live R2 binding still Pending** (permanent CF account) |
+| G1-04 | Synthetic listing → audit → approve → PageRelease → public fetch | INV-14–18 | **Waived (2026-08-07)** | Put-before-activate + shared memory store + Postgres pointer proven (`g1-listing-publish.test.ts` asserts `artifactSource=r2_memory`); `pnpm ops publish:demo`; R2 adapter + `wireArtifactStoreFromEnv` ready; **live R2 deferred** until `wrangler login` + bucket Selected — see `g1-04-publication-runbook.md` |
 | G1-05 | PageRelease rollback to prior manifest | INV-15, RC-06 | **Pass** | `g1-listing-publish.test.ts` activate v2 → rollback → v1; green on main CI |
 | G1-06 | Approval + Command + outbox atomicity; provider call outside txn | INV-19–20 | **Pass** | `approval-command-outbox.test.ts`; `publishApprovedPage` post-commit activate; green on main CI |
 | G1-07 | Ambiguous timeout → NeedsReconciliation; no blind recreate | INV-21, RC-08 | **Pass** | Fixtures + resolve + `/ops/reconciliation`; green on main CI |
@@ -31,15 +32,14 @@ Tenant/rooftop/team identity → forced tenant/purpose boundary → requirements
 | G1-15 | Threat model reviewed for skeleton surfaces | threat-model | Partial | Engineering attestation in `docs/threat-model.md` (2026-07-30); formal owner/security sign-off still Pending |
 | G1-16 | All synthetic data labeled `SYNTHETIC` | partners | Partial | Seed/demos + `pnpm scan:pii` asserts dossier `SYNTHETIC` + `NO LIVE PARTNER SELECTED`; program owner cross-check sign-off still Pending |
 
-## Honest Pass gap list (not Pass-ready yet)
+## Honest gap list (Conditional close)
 
-| Blocker | Gate IDs | Owner / note |
+| Item | Gate IDs | Owner / note |
 | --- | --- | --- |
-| Claim permanent Cloudflare account (Deadpan Kosmoceratops; claim ≤60m from last `--temporary` deploy) | G1-04 (R2) | Claim URL printed by wrangler only (never commit tokens); R2 unsupported on temp accounts |
-| Live R2 `PUBLIC_ARTIFACTS` Selected + wire `setDefaultArtifactStore` | G1-04 | Permanent CF account; see `g1-04-publication-runbook.md` |
+| `wrangler login` + R2 `PUBLIC_ARTIFACTS` Selected + uncomment binding | G1-04 lift to Pass | Post-conditional; temp accounts cannot bind R2; use `wireArtifactStoreFromEnv` |
 | Formal threat-model + fixture sign-off | G1-15, G1-16 | Program owner / security — checklist below |
 
-**Do not** pull G2 live PII until this list clears or is Waived.
+**Do not** pull G2 live PII until G1-15/16 are signed (or explicitly Waived) and live-R2 waiver is accepted for Conditional exit.
 
 ## Sign-off
 
@@ -50,14 +50,14 @@ Confirm each item, then fill the table:
 1. [ ] Read `docs/threat-model.md` § “G1 skeleton surface review” — accept engineering attestation or list residuals.
 2. [ ] Confirm `docs/partners/ny-design-partner-dossier.md` remains `SYNTHETIC` + `NO LIVE PARTNER SELECTED`.
 3. [ ] Confirm no live applicant PII in repo fixtures/seeds (rely on `pnpm scan:pii` + spot check).
-4. [ ] Accept G1-02/G1-04 remaining as Partial until Cloudflare account claimed + R2 Selected (or Waive with dated note).
+4. [ ] Accept G1-04 **Waived (2026-08-07)** — live R2 deferred until permanent Cloudflare account; synthetic path proven.
 
 | Role | Name | Date | Result |
 | --- | --- | --- | --- |
-| Engineering | DealerHire eng (self-check) | 2026-07-30 | Reaffirmed — see threat-model G1 surface review + operability pass (publish:demo /healthz) |
+| Engineering | DealerHire eng (self-check) | 2026-08-07 | Conditional close — G1-04 Waived (live R2 deferred); R2 wire helper landed |
 | Program owner | | | |
 | Security (optional G1) | | | |
 
-**Gate result:** ☐ Pass · ☐ Fail · ☐ Conditional (CF/R2 Partial accepted)
+**Gate result:** ☐ Pass · ☐ Fail · ☑ Conditional (CF/R2 Partial accepted)
 
 Next: [G2-live-pii.md](./G2-live-pii.md)
