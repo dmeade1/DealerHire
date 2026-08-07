@@ -143,6 +143,21 @@ export function resetDefaultArtifactStoreForTests(): void {
   defaultStore = null;
 }
 
+export type ArtifactStoreEnv = {
+  PUBLIC_ARTIFACTS?: R2LikeBucket;
+};
+
+/**
+ * Wire Selected R2 binding into the process default store.
+ * No-op when PUBLIC_ARTIFACTS is absent (G1 memory stand-in remains).
+ * Returns true when R2 was wired.
+ */
+export function wireArtifactStoreFromEnv(env: ArtifactStoreEnv): boolean {
+  if (!env.PUBLIC_ARTIFACTS) return false;
+  setDefaultArtifactStore(createR2BucketArtifactStore(env.PUBLIC_ARTIFACTS));
+  return true;
+}
+
 /**
  * ADR 0005 order: upload immutable artifact first, verify, then activate pointer.
  * Activation is caller's responsibility (Postgres PageRelease) after put succeeds.

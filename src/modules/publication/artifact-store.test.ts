@@ -6,6 +6,7 @@ import {
   putPageArtifactBeforeActivate,
   resetDefaultArtifactStoreForTests,
   setDefaultArtifactStore,
+  wireArtifactStoreFromEnv,
   type R2LikeBucket,
 } from "./artifact-store";
 
@@ -47,6 +48,29 @@ describe("R2-shaped page artifact store (G1-04 / ADR 0005)", () => {
     const stored = await putPageArtifactBeforeActivate(getDefaultArtifactStore(), ARTIFACT);
     const got = await injected.getByContentAddress(stored.contentAddress);
     expect(got?.body.title).toContain("SYNTHETIC");
+    resetDefaultArtifactStoreForTests();
+  });
+
+  it("wireArtifactStoreFromEnv no-ops without binding; wires R2 when present", async () => {
+    resetDefaultArtifactStoreForTests();
+    expect(wireArtifactStoreFromEnv({})).toBe(false);
+    expect(getDefaultArtifactStore().name).toBe("r2_memory");
+
+    const objects = new Map<string, string>();
+    const bucket: R2LikeBucket = {
+      async put(key, value) {
+        objects.set(key, value);
+      },
+      async get(key) {
+        const value = objects.get(key);
+        if (value === undefined) return null;
+        return { text: async () => value };
+      },
+    };
+    expect(wireArtifactStoreFromEnv({ PUBLIC_ARTIFACTS: bucket })).toBe(true);
+    expect(getDefaultArtifactStore().name).toBe("r2_bucket");
+    const stored = await putPageArtifactBeforeActivate(getDefaultArtifactStore(), ARTIFACT);
+    expect(objects.has(`pages/by-hash/${stored.contentAddress}.json`)).toBe(true);
     resetDefaultArtifactStoreForTests();
   });
 
